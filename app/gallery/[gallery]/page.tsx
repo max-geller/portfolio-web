@@ -68,6 +68,17 @@ export default function GalleryPage() {
     };
 
     fetchGalleryItem();
+
+    // Disable right-click
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
   }, [params.gallery]);
 
   if (error) {
@@ -89,6 +100,7 @@ export default function GalleryPage() {
             className="relative w-full cursor-pointer"
             style={{
               paddingBottom: `${(1 / image.aspectRatio) * 100}%`,
+              userSelect: 'none',
             }}
             onClick={() => {
               setPhotoIndex(index);
@@ -101,6 +113,8 @@ export default function GalleryPage() {
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover absolute top-0 left-0 w-full h-full"
+              style={{ pointerEvents: 'none' }}
+              unoptimized
             />
           </div>
         ))}
@@ -110,6 +124,9 @@ export default function GalleryPage() {
         close={() => setIsOpen(false)}
         index={photoIndex}
         slides={galleryItem.images?.map(img => ({ src: img.url })) || []}
+        carousel={{ finite: true }}
+ 
+    
       />
     </main>
   );
