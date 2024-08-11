@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/app/firebase'; // Make sure this path is correct
+import { db } from '@/app/firebase';
 import Image from 'next/image';
 
 interface GalleryItem {
@@ -11,6 +11,7 @@ interface GalleryItem {
   title?: string;
   date?: string;
   slug: string;
+  images?: string[];
 }
 
 export default function GalleryPage() {
@@ -21,30 +22,31 @@ export default function GalleryPage() {
   useEffect(() => {
     const fetchGalleryItem = async () => {
       try {
-        console.log("Params:", params);
-        console.log("Fetching gallery item with slug:", params.gallery);
         if (typeof params.gallery === 'string') {
           const q = query(collection(db, 'galleries'), where('slug', '==', params.gallery));
           const querySnapshot = await getDocs(q);
 
-          console.log("Query snapshot empty:", querySnapshot.empty);
           if (!querySnapshot.empty) {
             const docSnap = querySnapshot.docs[0];
             const data = docSnap.data();
-            console.log("Found document data:", data);
+            
+            // Fetch images subcollection
+            const imagesCollection = collection(db, 'galleries', docSnap.id, 'images');
+            const imagesSnapshot = await getDocs(imagesCollection);
+            const images = imagesSnapshot.docs.map(doc => doc.data().photoUrl);
+
             setGalleryItem({
               id: docSnap.id,
               photoUrl: data.photoUrl,
               title: data.title,
               date: data.date ? new Date(data.date.seconds * 1000).toLocaleDateString() : undefined,
-              slug: data.slug
+              slug: data.slug,
+              images: images
             });
           } else {
-            console.log('No such document!');
             setError('Gallery not found');
           }
         } else {
-          console.log('Invalid gallery parameter:', params.gallery);
           setError('Invalid gallery parameter');
         }
       } catch (error) {
@@ -65,17 +67,22 @@ export default function GalleryPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-8 lg:p-12">
       <h1 className="text-4xl font-bold mb-8">{galleryItem.title}</h1>
-      <div className="relative w-full h-96">
-        <Image
-          src={galleryItem.photoUrl}
-          alt={galleryItem.title || 'Gallery image'}
-          fill
-          className="object-cover"
-        />
+      <p className="mb-8">{galleryItem.date}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+        {galleryItem.images?.map((imageUrl, index) => (
+          <div key={index} className="relative aspect-[3/2]">
+            <Image
+              src={imageUrl}
+              alt={`Gallery image ${index + 1}`}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover rounded-lg"
+            />
+          </div>
+        ))}
       </div>
-      <p className="mt-4">{galleryItem.date}</p>
     </main>
   );
 }
