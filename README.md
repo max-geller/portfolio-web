@@ -19,10 +19,10 @@ Open [http://localhost:3000](http://localhost:3000) with you`r browser to see th
 
 ## Hosting & Deployment
 
-This project is hosted on Firebase.  To deploy manually, run the following command:
+This project is hosted on Vercel.  To deploy manually, run the following command:
 
 ```bash
-firebase deploy
+vercel deploy
 ```
 
 ## CMS
@@ -37,7 +37,7 @@ This project uses Strapi as a CMS.
 - [ ] Add Google Analytics
 - [ ] Firebase
 - [ ] Add Disqus
-- [ ] Firebase Hosting
+- [X] Vercel Hosting
 - [X] Setup Google Storage Bucket
 - [ ] Add Google Maps
 - [ ] Auto Post to Social Media
