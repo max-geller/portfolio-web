@@ -15,7 +15,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with you`r browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Hosting & Deployment
 
@@ -27,19 +27,23 @@ vercel deploy
 
 ## CMS
 
-This project uses Strapi as a CMS.
+This project uses Firebase as a CMS.
 
 ## To-Do
 
-- [ ] GIF Not Found Page
-- [ ] Setup CMS (Strapi) (Google Cloud Run)
-- [ ] Google Cloud Hosting
-- [ ] Add Google Analytics
-- [ ] Firebase
-- [ ] Add Disqus
 - [X] Vercel Hosting
-- [X] Setup Google Storage Bucket
+- [X] Setup Firebase Storage Bucket
+- [X] Firebase Firestore Configuration
+- [X] Add Image Carousel
+- [ ] GIF Not Found Page
+- [ ] Add Google Analytics
 - [ ] Add Google Maps
-- [ ] Auto Post to Social Media
-- [ ] Auto Post Entry from Google Functions
-- [ ] Post from GellerCloud
+- [ ] Fix Footer
+- [ ] Fix Gallery Layout
+- [ ] Add Categories
+- [ ] Add About Section
+- [ ] Optimize for SEO / SSR (Keywords)
+- [ ] Add Contact Form
+- [ ] Upload Recent Trips
+- [ ] Add Image Metadata
+- [ ] isActive Display Logic
