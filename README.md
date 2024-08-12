@@ -47,3 +47,4 @@ This project uses Firebase as a CMS.
 - [ ] Upload Recent Trips
 - [ ] Add Image Metadata
 - [ ] isActive Display Logic
+- [ ] Restrict Slugs to Unique Value
