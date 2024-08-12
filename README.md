@@ -49,4 +49,5 @@ This project uses Firebase as a CMS.
 - [ ] isActive Display Logic
 - [ ] Restrict Slugs to Unique Value
 - [ ] Add Automated Captions to Carousel Slideshow (AI)
-- [ ] Add Gear Grid with Affiliate Links
+- [ ] Add (Gear Grid with Affiliate Links)[https://patkay.com/pages/gear#carry]
+- [ ] Shop Prints
