@@ -11,8 +11,7 @@ function classNames(...classes: string[]) {
 const navLinks = [
   { id: 1, name: "TRAVEL", href: "/" },
   { id: 2, name: "AERIAL", href: "aerial" },
-  { id: 3, name: "ABOUT", href: "about" },
-  { id: 4, name: "CONTACT", href: "contact" },
+  { id: 3, name: "CONTACT", href: "contact" },
 
 ];
 
