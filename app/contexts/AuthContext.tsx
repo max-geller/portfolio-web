@@ -20,33 +20,27 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   console.log('AuthProvider rendering');
-  const initialized = useRef(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('AuthProvider useEffect - initialized:', initialized.current);
-    if (initialized.current) return;
-    initialized.current = true;
+    console.log('Setting up auth state listener');
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', { user: !!user, userId: user?.uid });
+      setUser(user);
+      setLoading(false);
+    });
     
-    if (typeof window !== 'undefined') {
-      console.log('Setting up auth state listener');
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        console.log('Auth state changed:', { user: !!user });
-        setUser(user);
-        setLoading(false);
-      });
-      
-      // Only clean up when component unmounts
-      return () => {
-        console.log('AuthProvider unmounting, cleaning up listener');
-        unsubscribe();
-      };
-    }
+    return () => {
+      console.log('AuthProvider unmounting, cleaning up listener');
+      unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    console.log('Login successful:', result.user.uid);
+    return result;
   };
 
   const logout = async () => {
