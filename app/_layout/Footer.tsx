@@ -26,8 +26,6 @@ export default function Footer() {
         </div>
         <a
                 href="/admin"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 <FontAwesomeIcon
                   icon={faInstagram}

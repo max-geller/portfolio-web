@@ -4,27 +4,21 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  console.log('LoginPage rendering');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  console.log('Auth hook loaded:', !!login);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log('Login form submitted');
     e.preventDefault();
     try {
-      console.log('Starting login process');
       setError('');
       setLoading(true);
       await login(email, password);
-      console.log('Login successful, redirecting');
       router.push('/admin/manage');
     } catch (error: any) {
-      console.error('Login error:', error);
       setError(error.message || 'Failed to login');
     } finally {
       setLoading(false);
