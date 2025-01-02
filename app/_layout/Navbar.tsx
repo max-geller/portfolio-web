@@ -13,7 +13,7 @@ const navLinks = [
   { id: 2, name: "STILLS", href: "/" },
   { id: 3, name: "FPV", href: "/fpv" },
   { id: 4, name: "ABOUT", href: "/about" },
-  { id: 4, name: "CONTACT", href: "contact" },
+  { id: 5, name: "CONTACT", href: "contact" },
 
 ];
 

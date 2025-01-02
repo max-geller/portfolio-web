@@ -8,7 +8,9 @@ import {
   faGithub,
   faYoutube,
   faSquareXTwitter,
+
 } from "@fortawesome/free-brands-svg-icons";
+import { faGear } from "@fortawesome/free-solid-svg-icons";
 import { faEnvelope } from "@fortawesome/free-regular-svg-icons";
 
 function getCurrentYear() {
@@ -22,6 +24,17 @@ export default function Footer() {
         <div className="flex-col">
           <div>Copyright © {getCurrentYear()} Max Geller</div>
         </div>
+        <a
+                href="/admin"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FontAwesomeIcon
+                  icon={faInstagram}
+                  className="svg inline-block"
+                  style={{ color: "gray-100", fontSize: 20 }}
+                />
+              </a>
         <span className="flex-grow"></span>
         <div className="social ">
           <ul>
