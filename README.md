@@ -5,7 +5,7 @@ Hosted on Vercel
 
 ## Running Locally
 
-```bash
+```zsh
 npm run dev
 # or
 yarn dev
@@ -21,7 +21,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 This project is hosted on Vercel.  To deploy manually, run the following command:
 
-```bash
+```zsh
 vercel deploy
 ```
 

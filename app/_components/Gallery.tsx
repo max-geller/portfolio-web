@@ -17,6 +17,7 @@ interface GalleryItem {
 
 export default function Gallery() {
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  
 
   useEffect(() => {
     const fetchGalleryItems = async () => {
@@ -34,6 +35,7 @@ export default function Gallery() {
           slug: data.slug
         } as GalleryItem;
       });
+      
       
       setGalleryItems(items);
     };

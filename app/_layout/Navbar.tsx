@@ -9,9 +9,11 @@ function classNames(...classes: string[]) {
 }
 
 const navLinks = [
-  { id: 1, name: "TRAVEL", href: "/" },
-  { id: 2, name: "AERIAL", href: "aerial" },
-  { id: 3, name: "CONTACT", href: "contact" },
+  { id: 1, name: "TRAVEL", href: "/travel" },
+  { id: 2, name: "STILLS", href: "/" },
+  { id: 3, name: "FPV", href: "/fpv" },
+  { id: 4, name: "ABOUT", href: "/about" },
+  { id: 4, name: "CONTACT", href: "contact" },
 
 ];
 
