@@ -13,7 +13,7 @@ const categories: CategoryOption[] = [
   {
     title: "Landscape",
     slug: "landscape",
-    image: "/images/categories/landscape.jpg", // You'll need to add these images
+    image: "https://firebasestorage.googleapis.com/v0/b/portfolio-432216.firebasestorage.app/o/temp%2FLauterbrunen-6.jpg?alt=media&token=cf9634cf-df05-4306-80f8-b79377cfb813", // You'll need to add these images
   },
   {
     title: "Urban",
