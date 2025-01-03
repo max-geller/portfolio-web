@@ -1,0 +1,36 @@
+.dashboard-grid {
+  @apply grid gap-4 p-6;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.widget {
+  @apply bg-white rounded-lg shadow-lg p-6 transition-all duration-200 hover:shadow-xl;
+}
+
+.widget-header {
+  @apply flex justify-between items-center mb-4;
+}
+
+.widget-title {
+  @apply text-lg font-semibold text-gray-700;
+}
+
+.widget-content {
+  @apply space-y-4;
+}
+
+.widget-1x1 {
+  @apply col-span-1 row-span-1;
+}
+
+.widget-2x1 {
+  @apply col-span-2 row-span-1;
+}
+
+.widget-3x1 {
+  @apply col-span-3 row-span-1;
+}
+
+.widget-2x2 {
+  @apply col-span-2 row-span-2;
+}
