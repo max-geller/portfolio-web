@@ -1,9 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { db, storage } from "@/app/firebase";
 import { GalleryDocument, GalleryImage } from "@/app/types/gallery";
+
+// Add type for navigation category
+type NavigationCategory = "stills" | "travel" | "aerial";
 
 interface GalleryFormProps {
   initialData?: Partial<GalleryDocument>;
@@ -17,12 +20,24 @@ interface FormErrors {
   primaryCategory?: string;
 }
 
+interface CachedSlug {
+  isAvailable: boolean;
+  timestamp: number;
+}
+
+const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
+const MAX_CACHE_SIZE = 100; // Maximum number of cached slugs
+
 export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps) {
   const [loading, setLoading] = useState(false);
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+
+  // Update slug cache to include timestamps
+  const slugCache = useRef<Map<string, CachedSlug>>(new Map());
 
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
@@ -30,7 +45,7 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
     description: initialData?.description || "",
     location: initialData?.location || "",
     navigation: {
-      category: initialData?.navigation?.category || "stills",
+      category: (initialData?.navigation?.category || "stills") as NavigationCategory,
       primaryCategory: initialData?.navigation?.primaryCategory || "",
       secondaryCategory: initialData?.navigation?.secondaryCategory || "",
     },
@@ -40,6 +55,117 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
       accessories: initialData?.gear?.accessories || [],
     },
   });
+
+  // Clean up old cache entries
+  const cleanupCache = () => {
+    const now = Date.now();
+    const entries = Array.from(slugCache.current.entries());
+    
+    // Remove expired entries
+    entries.forEach(([slug, data]) => {
+      if (now - data.timestamp > CACHE_DURATION) {
+        slugCache.current.delete(slug);
+      }
+    });
+
+    // If still too many entries, remove oldest ones
+    if (slugCache.current.size > MAX_CACHE_SIZE) {
+      const sortedEntries = entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const entriesToRemove = sortedEntries.slice(0, sortedEntries.length - MAX_CACHE_SIZE);
+      entriesToRemove.forEach(([slug]) => slugCache.current.delete(slug));
+    }
+  };
+
+  const forceRefreshSlugCache = async (slug: string) => {
+    setIsCheckingSlug(true);
+    slugCache.current.delete(slug);
+    await checkSlugAvailability(slug);
+    setIsCheckingSlug(false);
+  };
+
+  const generateSlug = (title: string): string => {
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+    
+    // Only allow current year or next year
+    if (initialData?.date) {
+      const galleryYear = new Date(initialData.date).getFullYear();
+      if (galleryYear < currentYear || galleryYear > nextYear) {
+        throw new Error("Gallery year must be current or next year only");
+      }
+    }
+
+    return `${title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')}-${currentYear}`;
+  };
+
+  useEffect(() => {
+    // Clean up cache periodically
+    const cleanupInterval = setInterval(cleanupCache, CACHE_DURATION);
+    return () => clearInterval(cleanupInterval);
+  }, []);
+
+  useEffect(() => {
+    const updateSlug = async () => {
+      if (!formData.title) return;
+      
+      try {
+        setIsCheckingSlug(true);
+        const baseSlug = generateSlug(formData.title);
+        let finalSlug = baseSlug;
+        let counter = 1;
+        let isAvailable = await checkSlugAvailability(finalSlug);
+        
+        while (!isAvailable) {
+          finalSlug = `${baseSlug}-${counter}`;
+          isAvailable = await checkSlugAvailability(finalSlug);
+          counter++;
+        }
+        
+        setFormData(prev => ({ ...prev, slug: finalSlug }));
+      } catch (error) {
+        setErrors(prev => ({ 
+          ...prev, 
+          slug: error instanceof Error ? error.message : "Invalid year in slug" 
+        }));
+      } finally {
+        setIsCheckingSlug(false);
+      }
+    };
+
+    const timeoutId = setTimeout(updateSlug, 500);
+    return () => clearTimeout(timeoutId);
+  }, [formData.title]);
+
+  const checkSlugAvailability = async (slug: string): Promise<boolean> => {
+    if (!slug) return false;
+    
+    // Check cache and verify it hasn't expired
+    const cached = slugCache.current.get(slug);
+    const now = Date.now();
+    
+    if (cached && (now - cached.timestamp < CACHE_DURATION)) {
+      return cached.isAvailable;
+    }
+    
+    const q = query(
+      collection(db, "galleries"),
+      where("slug", "==", slug)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const isAvailable = querySnapshot.empty;
+    
+    // Cache the result with timestamp
+    slugCache.current.set(slug, {
+      isAvailable,
+      timestamp: now
+    });
+    
+    return isAvailable;
+  };
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -141,6 +267,18 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
     aerial: ["Drone", "Helicopter"],
   };
 
+  // Fix the category change handler
+  const handleCategoryChange = (category: NavigationCategory) => {
+    setFormData(prev => ({
+      ...prev,
+      navigation: {
+        ...prev.navigation,
+        category,
+        primaryCategory: '', // Reset primary category when changing main category
+      },
+    }));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl mx-auto">
       {submitError && (
@@ -179,19 +317,20 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Slug</label>
-            <input
-              type="text"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, slug: e.target.value.toLowerCase() }))
-              }
-              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
-                ${errors.slug ? 'border-red-300' : 'border-gray-300'}`}
-              required
-            />
-            {errors.slug && (
-              <p className="mt-1 text-sm text-red-600">{errors.slug}</p>
+            <label className="block text-sm font-medium text-gray-700">URL Slug</label>
+            <div className="mt-1 flex rounded-md shadow-sm">
+              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                /gallery/
+              </span>
+              <input
+                type="text"
+                value={formData.slug}
+                readOnly
+                className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 bg-gray-50 sm:text-sm"
+              />
+            </div>
+            {isCheckingSlug && (
+              <p className="mt-1 text-sm text-gray-500">Checking slug availability...</p>
             )}
           </div>
 
@@ -234,10 +373,7 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
             <label className="block text-sm font-medium text-gray-700">Category</label>
             <select
               value={formData.navigation.category}
-              onChange={(e) => setFormData(prev => ({
-                ...prev,
-                navigation: { ...prev.navigation, category: e.target.value }
-              }))}
+              onChange={(e) => handleCategoryChange(e.target.value as NavigationCategory)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             >
               <option value="stills">Stills</option>
