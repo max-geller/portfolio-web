@@ -1,10 +1,10 @@
 "use client";
-import HomeGrid from "./_components/HomeGrid";
+import HomeSections from "./_components/HomeSections";
 
 export default function Home() {
   return (
-    <main className="flex  flex-col">
-      <HomeGrid />
+    <main className="flex flex-col">
+      <HomeSections />
     </main>
   );
 }
