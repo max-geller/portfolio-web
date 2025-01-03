@@ -1,34 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-
-// Define our navigation structures
-const travelMenu = {
-  "North America": {
-    regions: ["Arizona", "California", "Colorado", "Utah"],
-    href: "/travel/north-america"
-  },
-  "South America": {
-    regions: ["Colombia", "Peru", "Chile"],
-    href: "/travel/south-america"
-  },
-  "Europe": {
-    regions: ["France", "Italy", "Switzerland"],
-    href: "/travel/europe"
-  },
-  "Asia": {
-    regions: ["Japan", "Thailand", "Vietnam"],
-    href: "/travel/asia"
-  }
-};
-
-const stillsMenu = {
-  categories: [
-    { name: "Landscape", href: "/stills/landscape" },
-    { name: "Urban", href: "/stills/urban" },
-    { name: "Creative", href: "/stills/creative" }
-  ]
-};
+import { useNavigation } from "../contexts/NavigationContext";
 
 const navLinks = [
   { id: 3, name: "AERIAL", href: "/aerial" },
@@ -39,6 +12,9 @@ const navLinks = [
 
 export default function Navbar() {
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const navigation = useNavigation();
+
+  if (!navigation) return null; // Handle initial loading state
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md h-20">
@@ -58,10 +34,9 @@ export default function Navbar() {
                 STILLS
               </button>
               
-              {/* Stills Dropdown Menu */}
               <div className="absolute left-0 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
                 <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-lg py-2">
-                  {stillsMenu.categories.map((category) => (
+                  {navigation.stills.categories.map((category) => (
                     <Link
                       key={category.name}
                       href={category.href}
@@ -80,10 +55,9 @@ export default function Navbar() {
                 TRAVEL
               </button>
               
-              {/* Main Dropdown Menu */}
               <div className="absolute left-0 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
                 <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-lg py-2">
-                  {Object.entries(travelMenu).map(([region, { href }]) => (
+                  {Object.entries(navigation.travel).map(([region, { href, regions }]) => (
                     <div
                       key={region}
                       className="relative group/region"
@@ -97,11 +71,10 @@ export default function Navbar() {
                         {region}
                       </Link>
 
-                      {/* Sub-Dropdown for Regions */}
-                      {hoveredRegion === region && (
+                      {hoveredRegion === region && regions.length > 0 && (
                         <div className="absolute left-full top-0 w-48 ml-0.5">
                           <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-lg py-2">
-                            {travelMenu[region].regions.map((subRegion) => (
+                            {regions.map((subRegion) => (
                               <Link
                                 key={subRegion}
                                 href={`${href}/${subRegion.toLowerCase()}`}

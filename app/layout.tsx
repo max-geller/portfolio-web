@@ -6,6 +6,7 @@ import { Inter } from "next/font/google";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import { GoogleAnalytics } from "./lib/analytics/GoogleAnalytics";
+import { NavigationProvider } from "./contexts/NavigationContext";
 
 
 config.autoAddCss = false;
@@ -25,11 +26,13 @@ export default function RootLayout({
     <html lang="en">
       <GoogleAnalytics GA_MEASUREMENT_ID="G-9ZGCCX9B93" />
       <body className={font.className}>
-        <Navbar />
-        <div className="pt-20">
-          {children}
-        </div>
-        <Footer />
+        <NavigationProvider>
+          <Navbar />
+          <div className="pt-20">
+            {children}
+          </div>
+          <Footer />
+        </NavigationProvider>
       </body>
     </html>
   );
