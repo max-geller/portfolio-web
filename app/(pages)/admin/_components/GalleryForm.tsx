@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, setDoc } from "firebase/firestore";
 import { db, storage } from "@/app/firebase";
 import { GalleryDocument, GalleryImage } from "@/app/types/gallery";
 import { ImageMetadataForm } from './ImageMetadataForm';
@@ -361,6 +361,17 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
     setSubmitError(null);
 
     try {
+      // Check for duplicate slug
+      const galleryRef = collection(db, 'galleries');
+      const slugQuery = query(galleryRef, where('slug', '==', formData.slug));
+      const slugSnapshot = await getDocs(slugQuery);
+      
+      if (!slugSnapshot.empty) {
+        setErrors(prev => ({ ...prev, slug: 'This slug is already in use' }));
+        setLoading(false);
+        return;
+      }
+
       console.log('Looking for cover image', { coverImageId, galleryImages });
       const coverImage = galleryImages.find(img => img.previewUrl === coverImageId);
       
@@ -409,19 +420,15 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
         updatedAt: new Date().toISOString()
       };
 
-      console.log('Saving to Firestore:', galleryData);
+      console.log('Saving to Firestore with slug as ID:', formData.slug);
+      
+      // Use setDoc instead of addDoc to specify the document ID
+      const docRef = doc(galleryRef, formData.slug);
+      await setDoc(docRef, galleryData);
+      console.log('Document saved with slug:', formData.slug);
 
-      try {
-        const docRef = await addDoc(collection(db, 'galleries'), galleryData);
-        console.log('Document written with ID:', docRef.id);
-        
-        // Temporarily comment out onSubmit to prevent navigation
-        // if (onSubmit) {
-        //   await onSubmit(galleryData);
-        // }
-      } catch (firestoreError) {
-        console.error('Firestore save error:', firestoreError);
-        throw firestoreError;
+      if (onSubmit) {
+        await onSubmit(galleryData);
       }
 
     } catch (error) {
