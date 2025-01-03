@@ -201,6 +201,8 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
     slug: initialData?.slug || "",
     description: initialData?.description || "",
     location: initialData?.location || "",
+    date: initialData?.date || new Date().toISOString(),
+    isPublished: initialData?.isPublished || false,
     navigation: {
       category: (initialData?.navigation?.category || "stills") as NavigationCategory,
       primaryCategory: initialData?.navigation?.primaryCategory || "",
@@ -876,6 +878,43 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
             onClose={() => setPreviewOpen(false)}
           />}
         </AnimatePresence>
+
+        {/* Date and Publish Controls */}
+        <div className="mt-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="w-1/2">
+              <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+                Gallery Date
+              </label>
+              <input
+                type="date"
+                id="date"
+                value={formData.date.split('T')[0]}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  date: new Date(e.target.value).toISOString()
+                }))}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
+            
+            <div className="flex items-center">
+              <label htmlFor="isPublished" className="mr-3 text-sm font-medium text-gray-700">
+                Publish Gallery
+              </label>
+              <input
+                type="checkbox"
+                id="isPublished"
+                checked={formData.isPublished}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  isPublished: e.target.checked
+                }))}
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Submit Button */}
         <div className="mt-8 flex justify-end">

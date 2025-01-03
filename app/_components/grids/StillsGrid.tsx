@@ -20,7 +20,8 @@ export default function StillsGrid({ category }: StillsGridProps) {
         collection(db, "galleries"),
         and(
           where("navigation.category", "==", "stills"),
-          where("navigation.primaryCategory", "==", category)
+          where("navigation.primaryCategory", "==", category),
+          where("isPublished", "==", true)
         ),
         orderBy("date", "desc")
       );
@@ -31,7 +32,7 @@ export default function StillsGrid({ category }: StillsGridProps) {
         return {
           ...data,
           id: doc.id,
-          date: data.date?.toDate(), // Convert Firestore Timestamp to Date
+          date: data.date ? new Date(data.date) : null,
         } as GalleryDocument;
       });
 
@@ -60,7 +61,7 @@ export default function StillsGrid({ category }: StillsGridProps) {
                     {item.title}
                   </h3>
                   <p className="text-white">
-                    {item.date?.toLocaleDateString()}
+                    {item.date ? new Date(item.date).toLocaleDateString() : ''}
                   </p>
                   {item.location && (
                     <p className="text-white text-sm mt-1">

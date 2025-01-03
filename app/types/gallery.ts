@@ -9,6 +9,8 @@ export interface GalleryImage {
   shutterSpeed?: string;
   aperture?: string;
   iso?: string;
+  date?: Date;
+  isPublished?: boolean;
   displaySize: 'small' | 'medium' | 'large';
   gridSpan?: {
     rows: number;
