@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import { useState } from 'react'
+
 import Link from "next/link";
 export default function ContactPage() {
   return (
@@ -9,9 +11,6 @@ export default function ContactPage() {
       <div>
         <div> 
           <Link href="/admin/manage">Manage Content</Link>
-        </div>
-        <div>
-          <Link href="/admin/login">Login</Link>
         </div>
         <div>
           <Link href="/admin/settings">Application Settings</Link>
