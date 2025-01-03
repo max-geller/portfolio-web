@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 interface CategoryOption {
   title: string;
@@ -13,13 +14,12 @@ const categories: CategoryOption[] = [
   {
     title: "Landscape",
     slug: "landscape",
-    image: "https://firebasestorage.googleapis.com/v0/b/portfolio-432216.firebasestorage.app/o/temp%2FLauterbrunen-6.jpg?alt=media&token=cf9634cf-df05-4306-80f8-b79377cfb813", // You'll need to add these images
+    image: "https://firebasestorage.googleapis.com/v0/b/portfolio-432216.firebasestorage.app/o/temp%2FLauterbrunen-6.jpg?alt=media&token=cf9634cf-df05-4306-80f8-b79377cfb813",
   },
   {
     title: "Urban",
     slug: "urban",
-    image:
-      "https://firebasestorage.googleapis.com/v0/b/portfolio-432216.firebasestorage.app/o/temp%2FDJI_0112.jpg?alt=media&token=ad707bf7-348d-4cc7-a72d-b8dc59f034b0",
+    image: "https://firebasestorage.googleapis.com/v0/b/portfolio-432216.firebasestorage.app/o/temp%2FDJI_0112.jpg?alt=media&token=ad707bf7-348d-4cc7-a72d-b8dc59f034b0",
   },
   {
     title: "Creative",
@@ -29,13 +29,27 @@ const categories: CategoryOption[] = [
 ];
 
 export default function StillsHome() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1025);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <main className="h-screen w-screen flex overflow-hidden">
+    <main className={`min-h-screen ${isMobile ? 'flex flex-col' : 'flex flex-row'}`}>
       {categories.map((category, index) => (
         <Link
           href={`/stills/${category.slug}`}
           key={category.slug}
-          className="relative w-1/3 h-full overflow-hidden group"
+          className={`relative overflow-hidden group ${
+            isMobile ? 'h-[33vh] w-full' : 'w-1/3 h-screen min-w-[240px]'
+          }`}
         >
           <motion.div
             initial={{ scale: 1.1 }}
@@ -49,6 +63,7 @@ export default function StillsHome() {
               fill
               className="object-cover"
               priority={index === 0}
+              sizes={isMobile ? "100vw" : "33vw"}
             />
             <div className="absolute inset-0 bg-black bg-opacity-30 transition-opacity duration-300 group-hover:bg-opacity-20" />
 
