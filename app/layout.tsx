@@ -26,7 +26,9 @@ export default function RootLayout({
       <GoogleAnalytics GA_MEASUREMENT_ID="G-9ZGCCX9B93" />
       <body className={font.className}>
         <Navbar />
-        {children}
+        <div className="pt-20">
+          {children}
+        </div>
         <Footer />
       </body>
     </html>
