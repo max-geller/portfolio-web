@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import TravelGrid from "./../../_components/TravelGrid";
+import TravelGrid from "../../_components/grids/TravelGrid";
 
 export default function TravelHome() {
   return (

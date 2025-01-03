@@ -1,5 +1,5 @@
 "use client";
-import StillsGrid from "./../../_components/StillsGrid";
+import StillsGrid from "../../_components/grids/StillsGrid";
 
 export default function StillsHome() {
   return (

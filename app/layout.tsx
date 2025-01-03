@@ -13,9 +13,9 @@ config.autoAddCss = false;
 const font = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Max Geller - Aerial, & Travel Photography",
+  title: "Max Geller - Travel & LandscapePhotography",
   description:
-    "Phoenix, Arizona based aerial and travel photographer Max Geller.",
+    "Phoenix, Arizona based travel, landscape and aerial photographer Max Geller.",
 };
 
 export default function RootLayout({
