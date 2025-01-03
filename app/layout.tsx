@@ -1,21 +1,19 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Fragment } from "react";
 import Navbar from "./_layout/Navbar";
 import Footer from "./_layout/Footer";
 import { Inter } from "next/font/google";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
-import Script from "next/script";
+import { GoogleAnalytics } from "./lib/analytics/GoogleAnalytics";
+
 
 config.autoAddCss = false;
-
 const font = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Max Geller - Travel & LandscapePhotography",
-  description:
-    "Phoenix, Arizona based travel, landscape and aerial photographer Max Geller.",
+  title: "Max Geller - Travel & Landscape Photography",
+  description: "Phoenix, Arizona based travel, landscape and aerial photographer Max Geller.",
 };
 
 export default function RootLayout({
@@ -25,15 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <Script src="https://www.googletagmanager.com/gtag/js?id=G-X772YPHC6Q" />
-      <Script id="google-analytics">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-X772YPHC6Q');
-        `}
-      </Script>
+      <GoogleAnalytics GA_MEASUREMENT_ID="G-9ZGCCX9B93" />
       <body className={font.className}>
         <Navbar />
         {children}

@@ -9,12 +9,12 @@ function classNames(...classes: string[]) {
 }
 
 const navLinks = [
-  { id: 2, name: "STILLS", href: "/stills" },
-  { id: 1, name: "TRAVEL", href: "/travel" },
-  { id: 1, name: "AERIAL", href: "/aerial" },
-  { id: 3, name: "PRINTS", href: "/prints" },
-  { id: 4, name: "ABOUT", href: "/about" },
-  { id: 5, name: "CONTACT", href: "contact" },
+  { id: 1, name: "STILLS", href: "/stills" },
+  { id: 2, name: "TRAVEL", href: "/travel" },
+  { id: 3, name: "AERIAL", href: "/aerial" },
+  { id: 4, name: "PRINTS", href: "/prints" },
+  { id: 5, name: "ABOUT", href: "/about" },
+  { id: 6, name: "CONTACT", href: "contact" },
 ];
 
 export default function Navbar() {

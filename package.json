@@ -27,6 +27,7 @@
     "yet-another-react-lightbox": "^3.21.3"
   },
   "devDependencies": {
+    "@types/gtag.js": "^0.0.20",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

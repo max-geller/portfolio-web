@@ -150,6 +150,23 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+      <ul>
+        <li>Popular Pages</li>
+        <li>User Demographics</li>
+        <li>Top Referring Sites</li>
+        <li>Top Browsers</li>
+        <li>Top Operating Systems</li>
+        <li>Top Devices</li>
+        <li>Bounce Rate Calculations</li>
+        <li>Geographic Distribution</li>
+        <li>Conversion Funnels for Print Sales</li>
+        <li>Photo Interactions</li>
+        <li>Add to Cart Events</li>
+        <li>Purchase Events</li>
+        <li>User Engagement Metrics</li>
+        <li>User Retention Metrics</li>
+        <li>User Acquisition Metrics</li>
+      </ul>
     </div>
   );
 }
