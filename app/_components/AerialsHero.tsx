@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -13,27 +13,51 @@ interface Section {
 const sections: Section[] = [
   {
     id: 1,
-    title: "TRAVEL",
+    title: "AERIALS",
     href: "/travel",
     imageUrl: "https://firebasestorage.googleapis.com/v0/b/portfolio-cms-cc3fe.appspot.com/o/galleries%2Fcabo-san-lucas-19%2F1723515384100_DJI_0508-2.jpg?alt=media&token=385d210e-3a36-4813-9741-1078a58d9435"
   },
   
 ];
 
-export default function HomeSections() {
+export default function AerialsHero() {
   const [scrollY, setScrollY] = useState(0);
   const [windowHeight, setWindowHeight] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+  let scrollTimeout: NodeJS.Timeout;
+
+  const handleScroll = useCallback(() => {
+    if (!isScrolling) {
+      setIsScrolling(true);
+      window.requestAnimationFrame(() => {
+        setScrollY(window.scrollY);
+      });
+    }
+
+    // Clear the previous timeout
+    clearTimeout(scrollTimeout);
+
+    // Set a new timeout
+    scrollTimeout = setTimeout(() => {
+      setIsScrolling(false);
+    }, 50); // Adjust this value to control the smoothness
+  }, [isScrolling]);
 
   useEffect(() => {
     setWindowHeight(window.innerHeight);
-    
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, [handleScroll]);
+
+  const calculateScale = (index: number) => {
+    const scrollProgress = (scrollY - index * windowHeight) * 0.0002;
+    const scale = 1 + Math.max(-0.2, Math.min(0.2, scrollProgress)); // Limit scale range
+    return scale;
+  };
 
   return (
     <div className="w-screen">
@@ -41,9 +65,9 @@ export default function HomeSections() {
         <Link key={section.id} href={section.href}>
           <div className="relative full-height-section overflow-hidden">
             <div
-              className="absolute inset-0 w-full h-full transform transition-transform duration-300"
+              className="absolute inset-0 w-full h-full transform transition-all duration-700 ease-out"
               style={{
-                transform: `scale(${1 + (scrollY - index * windowHeight) * 0.0002})`,
+                transform: `scale(${calculateScale(index)})`,
               }}
             >
               <Image
