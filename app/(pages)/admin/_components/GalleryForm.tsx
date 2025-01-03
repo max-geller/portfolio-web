@@ -56,6 +56,9 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
     },
   });
 
+  const [manualYearOverride, setManualYearOverride] = useState<boolean>(false);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+
   // Clean up old cache entries
   const cleanupCache = () => {
     const now = Date.now();
@@ -84,21 +87,12 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
   };
 
   const generateSlug = (title: string): string => {
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
+    const yearToUse = manualYearOverride ? selectedYear : new Date().getFullYear();
     
-    // Only allow current year or next year
-    if (initialData?.date) {
-      const galleryYear = new Date(initialData.date).getFullYear();
-      if (galleryYear < currentYear || galleryYear > nextYear) {
-        throw new Error("Gallery year must be current or next year only");
-      }
-    }
-
     return `${title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')}-${currentYear}`;
+      .replace(/(^-|-$)/g, '')}-${yearToUse}`;
   };
 
   useEffect(() => {
@@ -280,269 +274,302 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl mx-auto">
-      {submitError && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{submitError}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Basic Information */}
-      <div className="bg-white shadow-sm rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Title</label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
-                ${errors.title ? 'border-red-300' : 'border-gray-300'}`}
-              required
-            />
-            {errors.title && (
-              <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">URL Slug</label>
-            <div className="mt-1 flex rounded-md shadow-sm">
-              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                /gallery/
-              </span>
-              <input
-                type="text"
-                value={formData.slug}
-                readOnly
-                className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 bg-gray-50 sm:text-sm"
-              />
-            </div>
-            {isCheckingSlug && (
-              <p className="mt-1 text-sm text-gray-500">Checking slug availability...</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
-              }
-              rows={4}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Location
-            </label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, location: e.target.value }))
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="bg-white shadow-sm rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Navigation</h2>
-        
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
-            <select
-              value={formData.navigation.category}
-              onChange={(e) => handleCategoryChange(e.target.value as NavigationCategory)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              <option value="stills">Stills</option>
-              <option value="travel">Travel</option>
-              <option value="aerial">Aerial</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Primary Category
-            </label>
-            <select
-              value={formData.navigation.primaryCategory}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  navigation: {
-                    ...prev.navigation,
-                    primaryCategory: e.target.value,
-                  },
-                }))
-              }
-              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
-                ${errors.primaryCategory ? 'border-red-300' : 'border-gray-300'}`}
-            >
-              <option value="">Select a category</option>
-              {primaryCategoryOptions[formData.navigation.category as keyof typeof primaryCategoryOptions].map(
-                (option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                )
-              )}
-            </select>
-            {errors.primaryCategory && (
-              <p className="mt-1 text-sm text-red-600">{errors.primaryCategory}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Equipment */}
-      <div className="bg-white shadow-sm rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Equipment</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Cameras (comma-separated)
-            </label>
-            <input
-              type="text"
-              value={formData.gear.cameras.join(", ")}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  gear: {
-                    ...prev.gear,
-                    cameras: e.target.value.split(",").map((item) => item.trim()),
-                  },
-                }))
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Lenses (comma-separated)
-            </label>
-            <input
-              type="text"
-              value={formData.gear.lenses.join(", ")}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  gear: {
-                    ...prev.gear,
-                    lenses: e.target.value.split(",").map((item) => item.trim()),
-                  },
-                }))
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Accessories (comma-separated)
-            </label>
-            <input
-              type="text"
-              value={formData.gear.accessories.join(", ")}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  gear: {
-                    ...prev.gear,
-                    accessories: e.target.value.split(",").map((item) => item.trim()),
-                  },
-                }))
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Images */}
-      <div className="bg-white shadow-sm rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Images</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Cover Image</label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-              <div className="space-y-1 text-center">
-                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8">
+        {submitError && (
+          <div className="animate-slide-down rounded-lg bg-red-50 p-4 border-l-4 border-red-400">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <div className="flex text-sm text-gray-600">
-                  <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                    <span>Upload a file</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setCoverImage(e.target.files?.[0] || null)}
-                      className="sr-only"
-                    />
-                  </label>
-                  <p className="pl-1">or drag and drop</p>
-                </div>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{submitError}</p>
               </div>
             </div>
-            {errors.coverImage && (
-              <p className="mt-1 text-sm text-red-600">{errors.coverImage}</p>
-            )}
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Gallery Images
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setGalleryImages(Array.from(e.target.files || []))}
-              className="mt-1 block w-full"
-            />
+        {/* Basic Information Card */}
+        <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6 transition-all duration-200 hover:shadow-md">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Basic Information</h2>
+          
+          <div className="space-y-6">
+            {/* Title Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
+                  transition-colors duration-200"
+                required
+              />
+            </div>
+
+            {/* Slug Section with Year Override */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">URL Slug</label>
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-600">Override Year</label>
+                  <button
+                    type="button"
+                    onClick={() => setManualYearOverride(!manualYearOverride)}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      manualYearOverride ? 'bg-indigo-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      manualYearOverride ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex space-x-4">
+                <div className="flex-grow">
+                  <div className="relative rounded-md shadow-sm">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 sm:text-sm">
+                      /gallery/
+                    </span>
+                    <input
+                      type="text"
+                      value={formData.slug}
+                      readOnly
+                      className="block w-full rounded-md border-gray-300 pl-20 bg-gray-50 sm:text-sm"
+                    />
+                  </div>
+                </div>
+
+                {manualYearOverride && (
+                  <div className="w-32">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(Number(e.target.value))}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    >
+                      {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, description: e.target.value }))
+                }
+                rows={4}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Location
+              </label>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, location: e.target.value }))
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-      >
-        {loading ? (
-          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        ) : null}
-        {loading ? "Creating Gallery..." : "Create Gallery"}
-      </button>
-    </form>
+        {/* Navigation */}
+        <div className="bg-white shadow-sm rounded-lg p-6 space-y-6">
+          <h2 className="text-xl font-semibold text-gray-900">Navigation</h2>
+          
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Category</label>
+              <select
+                value={formData.navigation.category}
+                onChange={(e) => handleCategoryChange(e.target.value as NavigationCategory)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value="stills">Stills</option>
+                <option value="travel">Travel</option>
+                <option value="aerial">Aerial</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Primary Category
+              </label>
+              <select
+                value={formData.navigation.primaryCategory}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    navigation: {
+                      ...prev.navigation,
+                      primaryCategory: e.target.value,
+                    },
+                  }))
+                }
+                className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
+                  ${errors.primaryCategory ? 'border-red-300' : 'border-gray-300'}`}
+              >
+                <option value="">Select a category</option>
+                {primaryCategoryOptions[formData.navigation.category as keyof typeof primaryCategoryOptions].map(
+                  (option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  )
+                )}
+              </select>
+              {errors.primaryCategory && (
+                <p className="mt-1 text-sm text-red-600">{errors.primaryCategory}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Equipment */}
+        <div className="bg-white shadow-sm rounded-lg p-6 space-y-6">
+          <h2 className="text-xl font-semibold text-gray-900">Equipment</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Cameras (comma-separated)
+              </label>
+              <input
+                type="text"
+                value={formData.gear.cameras.join(", ")}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    gear: {
+                      ...prev.gear,
+                      cameras: e.target.value.split(",").map((item) => item.trim()),
+                    },
+                  }))
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Lenses (comma-separated)
+              </label>
+              <input
+                type="text"
+                value={formData.gear.lenses.join(", ")}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    gear: {
+                      ...prev.gear,
+                      lenses: e.target.value.split(",").map((item) => item.trim()),
+                    },
+                  }))
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Accessories (comma-separated)
+              </label>
+              <input
+                type="text"
+                value={formData.gear.accessories.join(", ")}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    gear: {
+                      ...prev.gear,
+                      accessories: e.target.value.split(",").map((item) => item.trim()),
+                    },
+                  }))
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Images */}
+        <div className="bg-white shadow-sm rounded-lg p-6 space-y-6">
+          <h2 className="text-xl font-semibold text-gray-900">Images</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Cover Image</label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div className="space-y-1 text-center">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div className="flex text-sm text-gray-600">
+                    <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                      <span>Upload a file</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setCoverImage(e.target.files?.[0] || null)}
+                        className="sr-only"
+                      />
+                    </label>
+                    <p className="pl-1">or drag and drop</p>
+                  </div>
+                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                </div>
+              </div>
+              {errors.coverImage && (
+                <p className="mt-1 text-sm text-red-600">{errors.coverImage}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Gallery Images
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => setGalleryImages(Array.from(e.target.files || []))}
+                className="mt-1 block w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {loading ? (
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : null}
+          {loading ? "Creating Gallery..." : "Create Gallery"}
+        </button>
+      </form>
+    </div>
   );
 }
