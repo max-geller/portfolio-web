@@ -105,56 +105,75 @@ const SortableImage = ({
       style={style}
       className={`bg-white rounded-lg shadow-sm p-4 space-y-4 ${isCover ? 'ring-2 ring-indigo-500' : ''}`}
     >
-      <div 
-        className="relative aspect-video cursor-grab active:cursor-grabbing" 
-        {...attributes} 
-        {...listeners}
-      >
-        <img
-          src={image.previewUrl}
-          alt={image.title}
-          className="object-cover w-full h-full rounded-lg"
-        />
-        <div className="absolute top-2 right-2 flex space-x-2">
-          <button
-            type="button"
-            className={`p-2 bg-white rounded-full shadow-sm transition-colors ${
-              isCover ? 'bg-indigo-500 text-white' : 'hover:bg-gray-50'
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSetCover();
-            }}
-            title={isCover ? "Cover Image" : "Set as Cover"}
-          >
-            <StarIcon className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-50"
-            onClick={(e) => {
-              e.stopPropagation();
-              // handle edit
-            }}
-          >
-            <EditIcon className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            type="button"
-            className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-50"
-            onClick={(e) => {
-              e.stopPropagation();
-              // handle delete
-            }}
-          >
-            <TrashIcon className="w-4 h-4 text-gray-600" />
-          </button>
+      <div className="relative">
+        <div 
+          className="aspect-video cursor-grab active:cursor-grabbing" 
+          {...attributes} 
+          {...listeners}
+        >
+          <img
+            src={image.previewUrl}
+            alt={image.title}
+            className="object-cover w-full h-full rounded-lg"
+          />
         </div>
-        {isCover && (
-          <div className="absolute bottom-2 left-2 bg-indigo-500 text-white px-2 py-1 rounded-md text-xs">
-            Cover Image
-          </div>
-        )}
+        
+        <div className="absolute top-2 right-2 flex space-x-2" onClick={(e) => e.stopPropagation()}>
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className={`p-2 bg-white rounded-full shadow-sm transition-all duration-200 ${
+              isCover 
+                ? 'bg-indigo-500 text-white hover:bg-indigo-600' 
+                : 'hover:bg-gray-50 hover:text-indigo-500'
+            }`}
+            onClick={onSetCover}
+            title={isCover ? "Current Cover Image" : "Set as Cover Image"}
+          >
+            <motion.div
+              animate={isCover ? { rotate: 360, scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <StarIcon className="w-4 h-4" />
+            </motion.div>
+          </motion.button>
+          
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 hover:text-indigo-500 transition-colors duration-200"
+            onClick={() => {/* handle edit */}}
+            title="Edit Image Details"
+          >
+            <EditIcon className="w-4 h-4" />
+          </motion.button>
+          
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.1, color: '#EF4444' }}
+            whileTap={{ scale: 0.95 }}
+            className="p-2 bg-white rounded-full shadow-sm hover:bg-red-50 transition-colors duration-200"
+            onClick={() => {/* handle delete */}}
+            title="Delete Image"
+          >
+            <TrashIcon className="w-4 h-4" />
+          </motion.button>
+        </div>
+
+        <AnimatePresence>
+          {isCover && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute bottom-2 left-2 bg-indigo-500 text-white px-2 py-1 rounded-md text-xs font-medium"
+            >
+              Cover Image
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div onClick={(e) => e.stopPropagation()}>
