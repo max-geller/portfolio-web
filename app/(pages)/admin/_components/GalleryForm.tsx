@@ -77,7 +77,8 @@ const SortableImage = ({
   viewMode,
   onMetadataUpdate,
   isCover,
-  onSetCover 
+  onSetCover,
+  onDelete 
 }: { 
   image: GalleryImageWithMetadata; 
   index: number;
@@ -85,6 +86,7 @@ const SortableImage = ({
   onMetadataUpdate: (metadata: ImageMetadata) => void;
   isCover: boolean;
   onSetCover: () => void;
+  onDelete: () => void;
 }) => {
   const {
     attributes,
@@ -141,21 +143,13 @@ const SortableImage = ({
           
           <motion.button
             type="button"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 hover:text-indigo-500 transition-colors duration-200"
-            onClick={() => {/* handle edit */}}
-            title="Edit Image Details"
-          >
-            <EditIcon className="w-4 h-4" />
-          </motion.button>
-          
-          <motion.button
-            type="button"
             whileHover={{ scale: 1.1, color: '#EF4444' }}
             whileTap={{ scale: 0.95 }}
             className="p-2 bg-white rounded-full shadow-sm hover:bg-red-50 transition-colors duration-200"
-            onClick={() => {/* handle delete */}}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
             title="Delete Image"
           >
             <TrashIcon className="w-4 h-4" />
@@ -191,7 +185,7 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
   const [loading, setLoading] = useState(false);
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<GalleryImageWithMetadata[]>([]);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -331,25 +325,23 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
     return isAvailable;
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) {
-      newErrors.title = "Title is required";
+    if (!formData.title) {
+      newErrors.title = 'Title is required';
     }
-
-    if (!formData.slug.trim()) {
-      newErrors.slug = "Slug is required";
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = "Slug must contain only lowercase letters, numbers, and hyphens";
+    if (!formData.slug) {
+      newErrors.slug = 'Slug is required';
     }
-
-    if (!coverImage && !initialData?.photoUrl) {
-      newErrors.coverImage = "Cover image is required";
+    if (!formData.navigation.primaryCategory) {
+      newErrors.primaryCategory = 'Primary category is required';
     }
-
-    if (formData.navigation.category === "stills" && !formData.navigation.primaryCategory) {
-      newErrors.primaryCategory = "Primary category is required for stills";
+    if (galleryImages.length === 0) {
+      newErrors.images = 'At least one image is required';
+    }
+    if (!coverImageId) {
+      newErrors.coverImage = 'Please select a cover image';
     }
 
     setErrors(newErrors);
@@ -358,29 +350,80 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submission started');
+    
+    if (!validateForm()) {
+      console.log('Form validation failed', errors);
+      return;
+    }
+    
     setLoading(true);
+    setSubmitError(null);
 
     try {
+      console.log('Looking for cover image', { coverImageId, galleryImages });
       const coverImage = galleryImages.find(img => img.previewUrl === coverImageId);
-      if (!coverImage) {
-        setErrors({ ...errors, coverImage: 'Please select a cover image' });
+      
+      if (!coverImage?.file) {
+        console.log('No cover image found');
+        setErrors(prev => ({ ...prev, coverImage: 'Cover image is required' }));
         return;
       }
 
-      // Upload cover image first
+      // Upload cover image
+      console.log('Uploading cover image');
       const coverImageRef = ref(storage, `galleries/${formData.slug}/cover`);
-      await uploadBytes(coverImageRef, coverImage.file!);
+      await uploadBytes(coverImageRef, coverImage.file);
       const coverImageUrl = await getDownloadURL(coverImageRef);
+      console.log('Cover image uploaded successfully', coverImageUrl);
 
-      // Create gallery document with cover image URL
+      // Upload gallery images
+      console.log('Starting gallery images upload');
+      const uploadedImages = await Promise.all(
+        galleryImages.map(async (image, index) => {
+          if (!image.file) {
+            console.log(`Skipping image ${index} - no file`);
+            return null;
+          }
+          
+          console.log(`Uploading image ${index}`);
+          const imageRef = ref(storage, `galleries/${formData.slug}/images/${index}`);
+          await uploadBytes(imageRef, image.file);
+          const imageUrl = await getDownloadURL(imageRef);
+          console.log(`Image ${index} uploaded successfully`, imageUrl);
+          
+          return {
+            url: imageUrl,
+            metadata: image.metadata || {},
+            title: image.title || '',
+            isCover: image.previewUrl === coverImageId
+          };
+        })
+      );
+
       const galleryData = {
         ...formData,
         photoUrl: coverImageUrl,
+        images: uploadedImages.filter(Boolean),
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
-      // Continue with your existing upload logic for the rest of the images
-      // ...
+      console.log('Saving to Firestore:', galleryData);
+
+      try {
+        const docRef = await addDoc(collection(db, 'galleries'), galleryData);
+        console.log('Document written with ID:', docRef.id);
+        
+        // Temporarily comment out onSubmit to prevent navigation
+        // if (onSubmit) {
+        //   await onSubmit(galleryData);
+        // }
+      } catch (firestoreError) {
+        console.error('Firestore save error:', firestoreError);
+        throw firestoreError;
+      }
+
     } catch (error) {
       console.error('Error creating gallery:', error);
       setSubmitError('Failed to create gallery');
@@ -759,6 +802,13 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
                         viewMode={viewMode}
                         isCover={image.previewUrl === coverImageId}
                         onSetCover={() => setCoverImageId(image.previewUrl || null)}
+                        onDelete={() => {
+                          const newImages = galleryImages.filter((_, i) => i !== index);
+                          setGalleryImages(newImages);
+                          if (image.previewUrl === coverImageId) {
+                            setCoverImageId(null);
+                          }
+                        }}
                         onMetadataUpdate={(metadata) => {
                           const newImages = [...galleryImages];
                           newImages[index].metadata = metadata;
@@ -820,19 +870,48 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
           />}
         </AnimatePresence>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : null}
-          {loading ? "Creating Gallery..." : "Create Gallery"}
-        </button>
+        {/* Submit Button */}
+        <div className="mt-8 flex justify-end">
+          <button
+            type="submit"
+            disabled={loading || isCheckingSlug}
+            className={`
+              inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white
+              ${loading || isCheckingSlug 
+                ? 'bg-indigo-400 cursor-not-allowed' 
+                : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+              }
+            `}
+          >
+            {loading ? (
+              <>
+                <svg 
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24"
+                >
+                  <circle 
+                    className="opacity-25" 
+                    cx="12" 
+                    cy="12" 
+                    r="10" 
+                    stroke="currentColor" 
+                    strokeWidth="4"
+                  />
+                  <path 
+                    className="opacity-75" 
+                    fill="currentColor" 
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Creating Gallery...
+              </>
+            ) : (
+              'Create Gallery'
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );
