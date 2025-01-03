@@ -1,11 +1,10 @@
 "use client";
-import Image from "next/image";
-import Gallery from "./_components/Gallery";
+import HomeGrid from "./_components/HomeGrid";
 
 export default function Home() {
   return (
     <main className="flex  flex-col">
-      <Gallery />
+      <HomeGrid />
     </main>
   );
 }

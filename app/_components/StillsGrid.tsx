@@ -5,7 +5,7 @@ import Link from "next/link";
 import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
 import { db } from "@/app/firebase";
 
-interface TravelItem {
+interface StillsItem {
   id: string;
   photoUrl: string;
   title?: string;
@@ -13,13 +13,13 @@ interface TravelItem {
   slug: string;
 }
 
-export default function TravelGrid() {
-  const [travelItems, setTravelItems] = useState<TravelItem[]>([]);
+export default function StillsGrid() {
+  const [stillItems, setStillItems] = useState<StillsItem[]>([]);
 
   useEffect(() => {
-    const fetchTravelItems = async () => {
+    const fetchStillItems = async () => {
       // Create a query with orderBy
-      const q = query(collection(db, "galleries"), where("category", "==", "travel"), orderBy("date", "desc"));
+      const q = query(collection(db, "galleries"), where("category", "==", "stills"), orderBy("date", "desc"));
 
       const querySnapshot = await getDocs(q);
       const items = querySnapshot.docs.map((doc) => {
@@ -32,21 +32,21 @@ export default function TravelGrid() {
             ? new Date(data.date.seconds * 1000).toLocaleDateString()
             : undefined,
           slug: data.slug,
-        } as TravelItem;
+        } as StillsItem;
       });
 
-      setTravelItems(items);
+      setStillItems(items);
     };
 
-    fetchTravelItems();
+    fetchStillItems();
   }, []);
 
   return (
     <div className="w-full">
       <div className="mx-auto max-w-9xl px-0 sm:px-2 md:px-3 lg:px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-0">
-          {travelItems.map((item, index) => (
-            <Link key={item.id} href={`/travel/${item.slug}`}>
+          {stillItems.map((item, index) => (
+            <Link key={item.id} href={`/stills/${item.slug}`}>
               <div className="aspect-square bg-gray-200 relative group cursor-pointer">
                 <Image
                   src={item.photoUrl}

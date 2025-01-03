@@ -5,7 +5,7 @@ import Link from "next/link";
 import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
 import { db } from "@/app/firebase";
 
-interface TravelItem {
+interface FpvItem {
   id: string;
   photoUrl: string;
   title?: string;
@@ -13,13 +13,13 @@ interface TravelItem {
   slug: string;
 }
 
-export default function TravelGrid() {
-  const [travelItems, setTravelItems] = useState<TravelItem[]>([]);
+export default function fpvGrid() {
+  const [fpvItems, setFpvItems] = useState<FpvItem[]>([]);
 
   useEffect(() => {
-    const fetchTravelItems = async () => {
+    const fetchFpvItems = async () => {
       // Create a query with orderBy
-      const q = query(collection(db, "galleries"), where("category", "==", "travel"), orderBy("date", "desc"));
+      const q = query(collection(db, "galleries"), where("category", "==", "fpv"), orderBy("date", "desc"));
 
       const querySnapshot = await getDocs(q);
       const items = querySnapshot.docs.map((doc) => {
@@ -32,25 +32,25 @@ export default function TravelGrid() {
             ? new Date(data.date.seconds * 1000).toLocaleDateString()
             : undefined,
           slug: data.slug,
-        } as TravelItem;
+        } as FpvItem;
       });
 
-      setTravelItems(items);
+      setFpvItems(items);
     };
 
-    fetchTravelItems();
+    fetchFpvItems();
   }, []);
 
   return (
     <div className="w-full">
       <div className="mx-auto max-w-9xl px-0 sm:px-2 md:px-3 lg:px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-0">
-          {travelItems.map((item, index) => (
-            <Link key={item.id} href={`/travel/${item.slug}`}>
+          {fpvItems.map((item, index) => (
+            <Link key={item.id} href={`/fpv/${item.slug}`}>
               <div className="aspect-square bg-gray-200 relative group cursor-pointer">
                 <Image
                   src={item.photoUrl}
-                  alt={`Travel image ${index + 1}`}
+                  alt={`FPV video ${index + 1}`}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, (max-width: 1536px) 33vw, 25vw"
                   className="object-cover"
