@@ -1,5 +1,5 @@
 "use client";
-import FpvGrid from "./../_components/FpvGrid";
+import FpvGrid from "./../../_components/FpvGrid";
 
 export default function FPVHome() {
   return (

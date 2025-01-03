@@ -1,7 +1,7 @@
 "use client";
-import { AuthProvider } from '../contexts/AuthContext';
-import ProtectedRoute from '../components/ProtectedRoute';
-import { useAuth } from '../contexts/AuthContext';
+import { AuthProvider } from '../../contexts/AuthContext';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import { useAuth } from '../../contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 
 function AdminHeader() {
