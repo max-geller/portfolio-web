@@ -1,22 +1,15 @@
 "use client";
 import React from "react";
 import "./styles/dashboard.css";
+import TrafficOverview from "./_components/_widgets/TrafficOverview";
 
 export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* Traffic Overview Widget - 3x1 */}
-          <div className="widget md:col-span-3">
-            <div className="widget-header">
-              <h2 className="widget-title">Visitor Traffic</h2>
-              <span className="text-sm text-gray-500">Last 90 days</span>
-            </div>
-            <div className="widget-content h-64 bg-gray-50 rounded-lg">
-              {/* Chart will go here */}
-            </div>
-          </div>
+
+          <TrafficOverview />
 
           {/* Quick Stats - 1x1 each */}
           <div className="widget">
