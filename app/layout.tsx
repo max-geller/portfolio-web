@@ -35,12 +35,8 @@ export default function RootLayout({
         `}
       </Script>
       <body className={font.className}>
-        <div className="min-h-screen pb-[60px]">
-          <Fragment>
-            <Navbar />
-            {children}
-          </Fragment>
-        </div>
+        <Navbar />
+        {children}
         <Footer />
       </body>
     </html>
