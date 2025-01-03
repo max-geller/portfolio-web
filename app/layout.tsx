@@ -35,11 +35,13 @@ export default function RootLayout({
         `}
       </Script>
       <body className={font.className}>
-        <Fragment>
-          <Navbar />
-          {children}
-          <Footer />
-        </Fragment>
+        <div className="min-h-screen pb-[60px]">
+          <Fragment>
+            <Navbar />
+            {children}
+          </Fragment>
+        </div>
+        <Footer />
       </body>
     </html>
   );
