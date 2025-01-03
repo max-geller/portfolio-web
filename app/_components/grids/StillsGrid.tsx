@@ -2,44 +2,44 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, where, and } from "firebase/firestore";
 import { db } from "@/app/firebase";
+import { GalleryDocument } from "@/app/types/gallery";
 
-interface StillsItem {
-  id: string;
-  photoUrl: string;
-  title?: string;
-  date?: string;
-  slug: string;
+interface StillsGridProps {
+  category: string; // e.g., "landscape", "urban", "creative"
 }
 
-export default function StillsGrid() {
-  const [stillItems, setStillItems] = useState<StillsItem[]>([]);
+export default function StillsGrid({ category }: StillsGridProps) {
+  const [stillItems, setStillItems] = useState<GalleryDocument[]>([]);
 
   useEffect(() => {
     const fetchStillItems = async () => {
-      // Create a query with orderBy
-      const q = query(collection(db, "galleries"), where("category", "==", "stills"), orderBy("date", "desc"));
+      // Query galleries with both category and primaryCategory filters
+      const q = query(
+        collection(db, "galleries"),
+        and(
+          where("navigation.category", "==", "stills"),
+          where("navigation.primaryCategory", "==", category)
+        ),
+        orderBy("date", "desc")
+      );
 
       const querySnapshot = await getDocs(q);
       const items = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
+          ...data,
           id: doc.id,
-          photoUrl: data.photoUrl,
-          title: data.title,
-          date: data.date
-            ? new Date(data.date.seconds * 1000).toLocaleDateString()
-            : undefined,
-          slug: data.slug,
-        } as StillsItem;
+          date: data.date?.toDate(), // Convert Firestore Timestamp to Date
+        } as GalleryDocument;
       });
 
       setStillItems(items);
     };
 
     fetchStillItems();
-  }, []);
+  }, [category]);
 
   return (
     <div className="w-full">
@@ -50,16 +50,23 @@ export default function StillsGrid() {
               <div className="aspect-square bg-gray-200 relative group cursor-pointer">
                 <Image
                   src={item.photoUrl}
-                  alt={`Travel image ${index + 1}`}
+                  alt={item.title}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, (max-width: 1536px) 33vw, 25vw"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
                   <h3 className="text-white text-xl font-bold">
-                    {item.title || "TITLE"}
+                    {item.title}
                   </h3>
-                  <p className="text-white">{item.date || "DATE"}</p>
+                  <p className="text-white">
+                    {item.date?.toLocaleDateString()}
+                  </p>
+                  {item.location && (
+                    <p className="text-white text-sm mt-1">
+                      {item.location}
+                    </p>
+                  )}
                 </div>
               </div>
             </Link>

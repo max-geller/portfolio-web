@@ -6,127 +6,159 @@ import { db } from '@/app/firebase';
 import Image from 'next/image';
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
+import { GalleryDocument, GalleryImage } from '@/app/types/gallery';
 
-interface GalleryImage {
-  url: string;
-  aspectRatio: number;
-}
-
-interface GalleryItem {
-  id: string;
-  photoUrl: string;
-  title?: string;
-  date?: string;
-  slug: string;
-  images?: GalleryImage[];
-}
-
-export default function GalleryPage() {
+export default function StillsGalleryPage() {
   const params = useParams();
-  const [galleryItem, setGalleryItem] = useState<GalleryItem | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [gallery, setGallery] = useState<GalleryDocument | null>(null);
+  const [images, setImages] = useState<GalleryImage[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchGalleryItem = async () => {
+    const fetchGallery = async () => {
       try {
-        if (typeof params.gallery === 'string') {
-          const q = query(collection(db, 'galleries'), where('slug', '==', params.gallery));
-          const querySnapshot = await getDocs(q);
+        // Fetch gallery document
+        const q = query(collection(db, 'galleries'), where('slug', '==', params.gallery));
+        const querySnapshot = await getDocs(q);
 
-          if (!querySnapshot.empty) {
-            const docSnap = querySnapshot.docs[0];
-            const data = docSnap.data();
-            
-            // Fetch images subcollection
-            const imagesCollection = collection(db, 'galleries', docSnap.id, 'images');
-            const imagesSnapshot = await getDocs(imagesCollection);
-            const images = imagesSnapshot.docs.map(doc => ({
-              url: doc.data().photoUrl,
-              aspectRatio: doc.data().aspectRatio || 1 // Default to 1 if not available
-            }));
+        if (!querySnapshot.empty) {
+          const docSnap = querySnapshot.docs[0];
+          const data = docSnap.data() as GalleryDocument;
+          setGallery({ ...data, id: docSnap.id });
 
-            setGalleryItem({
-              id: docSnap.id,
-              photoUrl: data.photoUrl,
-              title: data.title,
-              date: data.date ? new Date(data.date.seconds * 1000).toLocaleDateString() : undefined,
-              slug: data.slug,
-              images: images
-            });
-          } else {
-            setError('Gallery not found');
-          }
-        } else {
-          setError('Invalid gallery parameter');
+          // Fetch images subcollection
+          const imagesCollection = collection(db, 'galleries', docSnap.id, 'images');
+          const imagesSnapshot = await getDocs(imagesCollection);
+          const imagesData = imagesSnapshot.docs.map(doc => ({
+            ...doc.data()
+          } as GalleryImage));
+          setImages(imagesData);
         }
       } catch (error) {
-        console.error("Error fetching gallery item:", error);
-        setError('An error occurred while fetching the gallery');
+        console.error("Error fetching gallery:", error);
+        setError('Failed to load gallery');
       }
     };
 
-    fetchGalleryItem();
-
-    // Disable right-click
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-    };
-
-    document.addEventListener('contextmenu', handleContextMenu);
-
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-    };
+    if (params.gallery) {
+      fetchGallery();
+    }
   }, [params.gallery]);
 
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  if (!galleryItem) {
-    return <div>Loading...</div>;
-  }
+  if (error) return <div className="text-center p-8">{error}</div>;
+  if (!gallery) return <div className="text-center p-8">Loading...</div>;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-8 lg:p-12">
-      <h1 className="text-4xl font-bold mb-8">{galleryItem.title}</h1>
-      <p className="mb-8">{galleryItem.date}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-        {galleryItem.images?.map((image, index) => (
-          <div 
-            key={index} 
-            className="relative w-full cursor-pointer"
-            style={{
-              paddingBottom: `${(1 / image.aspectRatio) * 100}%`,
-              userSelect: 'none',
-            }}
-            onClick={() => {
-              setPhotoIndex(index);
-              setIsOpen(true);
-            }}
-          >
-            <Image
-              src={image.url}
-              alt={`Gallery image ${index + 1}`}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover absolute top-0 left-0 w-full h-full"
-              style={{ pointerEvents: 'none' }}
-              unoptimized
-            />
-          </div>
-        ))}
+    <main className="max-w-8xl mx-auto px-4 py-8">
+      {/* Gallery Header */}
+      <div className="mb-12">
+        <h1 className="text-4xl font-bold mb-4">{gallery.title}</h1>
+        {gallery.description && (
+          <p className="text-gray-600 mb-4">{gallery.description}</p>
+        )}
+        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+          {gallery.location && (
+            <div>📍 {gallery.location}</div>
+          )}
+          {gallery.date && (
+            <div>📅 {new Date(gallery.date).toLocaleDateString()}</div>
+          )}
+        </div>
       </div>
+
+      {/* Equipment Used */}
+      {gallery.gear && Object.keys(gallery.gear).length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold mb-4">Equipment</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {Array.isArray(gallery.gear.cameras) && gallery.gear.cameras.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-2">Cameras</h3>
+                <ul className="list-disc list-inside text-gray-600">
+                  {gallery.gear.cameras.map((camera, i) => (
+                    <li key={i}>{camera}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {Array.isArray(gallery.gear.lenses) && gallery.gear.lenses.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-2">Lenses</h3>
+                <ul className="list-disc list-inside text-gray-600">
+                  {gallery.gear.lenses.map((lens, i) => (
+                    <li key={i}>{lens}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {Array.isArray(gallery.gear.accessories) && gallery.gear.accessories.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-2">Accessories</h3>
+                <ul className="list-disc list-inside text-gray-600">
+                  {gallery.gear.accessories.map((accessory, i) => (
+                    <li key={i}>{accessory}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Image Grid */}
+      <div className="grid grid-cols-12 gap-4">
+        {images.map((image, index) => {
+          const cols = image.displaySize === 'large' ? 6 : image.displaySize === 'medium' ? 4 : 3;
+          const rows = image.gridSpan?.rows || 1;
+
+          return (
+            <div
+              key={index}
+              className={`col-span-${cols} row-span-${rows} relative cursor-pointer group`}
+              style={{
+                aspectRatio: image.aspectRatio,
+              }}
+              onClick={() => {
+                setPhotoIndex(index);
+                setIsOpen(true);
+              }}
+            >
+              <Image
+                src={image.url}
+                alt={image.title}
+                fill
+                className="object-cover"
+                sizes={`(max-width: 768px) 100vw, ${cols * 8.33}vw`}
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300">
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <h3 className="text-lg font-semibold">{image.title}</h3>
+                  {image.caption && <p className="text-sm">{image.caption}</p>}
+                  <div className="text-xs mt-2">
+                    {image.camera && <span className="mr-3">{image.camera}</span>}
+                    {image.shutterSpeed && <span className="mr-3">{image.shutterSpeed}</span>}
+                    {image.aperture && <span className="mr-3">{image.aperture}</span>}
+                    {image.iso && <span>ISO {image.iso}</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Lightbox */}
       <Lightbox
         open={isOpen}
         close={() => setIsOpen(false)}
         index={photoIndex}
-        slides={galleryItem.images?.map(img => ({ src: img.url })) || []}
-        carousel={{ finite: true }}
- 
-    
+        slides={images.map(img => ({
+          src: img.url,
+          title: img.title,
+          description: img.caption
+        }))}
       />
     </main>
   );
