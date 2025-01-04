@@ -101,6 +101,27 @@ export default function GalleryForm({
     setLoading(true);
 
     try {
+      // Upload images first
+      const uploadPromises = galleryImages.map(uploadImage);
+      const uploadedImages = await Promise.all(uploadPromises);
+      const validImages = uploadedImages.filter((img): img is NonNullable<typeof img> => img !== null);
+
+      // Find the selected cover image from original gallery images
+      const selectedCoverImage = galleryImages.find(img => img.previewUrl === coverImageId);
+      
+      if (!selectedCoverImage) {
+        toast.error("Please select a cover image");
+        return;
+      }
+
+      // Find the corresponding uploaded image
+      const coverImage = validImages[galleryImages.indexOf(selectedCoverImage)];
+
+      if (!coverImage) {
+        toast.error("Failed to process cover image");
+        return;
+      }
+
       // Check if slug exists
       const slugQuery = query(
         collection(db, "galleries"),
@@ -114,11 +135,6 @@ export default function GalleryForm({
         return;
       }
 
-      // Upload images
-      const uploadPromises = galleryImages.map(uploadImage);
-      const uploadedImages = await Promise.all(uploadPromises);
-      const validImages = uploadedImages.filter((img): img is NonNullable<typeof img> => img !== null);
-
       // Create gallery document
       const galleryRef = initialData?.id 
         ? doc(db, "galleries", initialData.id)
@@ -126,6 +142,7 @@ export default function GalleryForm({
 
       await setDoc(galleryRef, {
         ...formData,
+        photoUrl: coverImage.url,
         updatedAt: new Date().toISOString(),
         createdAt: initialData?.id ? initialData.createdAt : new Date().toISOString(),
       });
@@ -136,7 +153,7 @@ export default function GalleryForm({
       for (const image of validImages) {
         await addDoc(imagesCollection, {
           ...image,
-          isCover: coverImageId === image.url,
+          isCover: image.url === coverImage.url,
         });
       }
 
