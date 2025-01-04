@@ -49,6 +49,8 @@ export default function Navbar() {
               </div>
             </div>
 
+   
+
             {/* Travel Dropdown */}
             <div className="relative group">
               <button className="pl-4 hover:text-gray-400 hover:font-normal">

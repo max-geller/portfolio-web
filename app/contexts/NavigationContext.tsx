@@ -3,6 +3,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/app/firebase';
 
+interface Category {
+  id: string;
+  name: string;
+  parentCategory: "stills" | "travel" | "aerial";
+  type: "primary" | "secondary";
+  parentId?: string;
+  order: number;
+}
+
 interface NavigationStructure {
   travel: {
     [region: string]: {
@@ -11,6 +20,9 @@ interface NavigationStructure {
     };
   };
   stills: {
+    categories: { name: string; href: string; }[];
+  };
+  aerial: {
     categories: { name: string; href: string; }[];
   };
 }
@@ -22,49 +34,59 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const buildNavigation = async () => {
-      const q = query(collection(db, "galleries"));
-      const snapshot = await getDocs(q);
+      // First, fetch all categories
+      const categoriesQuery = query(collection(db, "categories"));
+      const categoriesSnapshot = await getDocs(categoriesQuery);
+      const categories = categoriesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Category[];
+
+      // Then fetch galleries for secondary category validation
+      const galleriesQuery = query(collection(db, "galleries"));
+      const galleriesSnapshot = await getDocs(galleriesQuery);
       
       const navStructure: NavigationStructure = {
         travel: {},
-        stills: { categories: [] }
+        stills: { categories: [] },
+        aerial: { categories: [] }
       };
 
-      snapshot.docs.forEach(doc => {
-        const gallery = doc.data();
-        // Handle existing documents that don't have navigation property yet
-        const navigation = gallery.navigation || {
-          category: gallery.category,
-          primaryCategory: gallery.primaryCategory,
-          secondaryCategory: gallery.secondaryCategory
-        };
-
-        if (!navigation) return; // Skip if no navigation data
-
-        const { category, primaryCategory, secondaryCategory } = navigation;
-
-        if (category === 'travel' && primaryCategory) {
-          if (!navStructure.travel[primaryCategory]) {
-            navStructure.travel[primaryCategory] = {
+      // Process primary categories first
+      categories
+        .filter(cat => cat.type === "primary")
+        .sort((a, b) => a.order - b.order)
+        .forEach(primaryCat => {
+          if (primaryCat.parentCategory === 'travel') {
+            navStructure.travel[primaryCat.name] = {
               regions: [],
-              href: `/travel/${primaryCategory.toLowerCase()}`
+              href: `/travel/${primaryCat.name.toLowerCase()}`
             };
-          }
-          if (secondaryCategory && !navStructure.travel[primaryCategory].regions.includes(secondaryCategory)) {
-            navStructure.travel[primaryCategory].regions.push(secondaryCategory);
-          }
-        } else if (category === 'stills' && primaryCategory) {
-          const categoryExists = navStructure.stills.categories.some(
-            cat => cat.name === primaryCategory
-          );
-          if (!categoryExists) {
+          } else if (primaryCat.parentCategory === 'stills') {
             navStructure.stills.categories.push({
-              name: primaryCategory,
-              href: `/stills/${primaryCategory.toLowerCase()}`
+              name: primaryCat.name,
+              href: `/stills/${primaryCat.name.toLowerCase()}`
+            });
+          } else if (primaryCat.parentCategory === 'aerial') {
+            navStructure.aerial.categories.push({
+              name: primaryCat.name,
+              href: `/aerial/${primaryCat.name.toLowerCase()}`
             });
           }
-        }
-      });
+        });
+
+      // Then process secondary categories
+      categories
+        .filter(cat => cat.type === "secondary")
+        .sort((a, b) => a.order - b.order)
+        .forEach(secondaryCat => {
+          if (secondaryCat.parentCategory === 'travel') {
+            const primaryCat = categories.find(pc => pc.id === secondaryCat.parentId);
+            if (primaryCat && navStructure.travel[primaryCat.name]) {
+              navStructure.travel[primaryCat.name].regions.push(secondaryCat.name);
+            }
+          }
+        });
 
       setNavigation(navStructure);
     };
