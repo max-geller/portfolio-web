@@ -210,20 +210,24 @@ export default function StillsGalleryPage() {
           src: img.url,
           title: img.title,
           description: (
-            <div className="flex flex-col gap-2 text-center">
-              {img.metadata?.camera?.make && img.metadata?.camera?.model && (
-                <div className="text-sm font-bold text-white">
-                  📸{" "}
-                  {`${img.metadata.camera.make} ${img.metadata.camera.model}`.trim()}
-                </div>
-              )}
-              {img.metadata?.lens?.make && img.metadata?.lens?.model && (
-                <div className="text-sm text-white">
-                  🔭{" "}
-                  {`${img.metadata.lens.make} ${img.metadata.lens.model}`.trim()}
-                </div>
-              )}
-              <div className="flex justify-center gap-6 text-xs text-white">
+            <div className="flex justify-between items-center w-full text-xs text-white p-0 m-0">
+              <div className="flex-1 text-left">
+                {img.metadata?.camera?.make && img.metadata?.camera?.model && (
+                  <span>
+                    {`${img.metadata.camera.make} ${img.metadata.camera.model}`.trim()}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex-1 text-center">
+                {img.metadata?.lens?.make && img.metadata?.lens?.model && (
+                  <span>
+                    {`${img.metadata.lens.make} ${img.metadata.lens.model}`.trim()}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex-1 text-right space-x-4">
                 {img.metadata?.settings?.shutterSpeed && (
                   <span>
                     {" "}
@@ -245,7 +249,7 @@ export default function StillsGalleryPage() {
           captionContainer: {
             background:
               "linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent)",
-            padding: "2rem",
+
           },
         }}
       />
