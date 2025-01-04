@@ -4,6 +4,7 @@ import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePathname } from "next/navigation";
 import AdminHeader from "./_layout/AdminHeader";
+import { Toaster } from 'react-hot-toast';
 
 export default function AdminLayout({
   children,
@@ -15,6 +16,7 @@ export default function AdminLayout({
       <ProtectedRoute>
         <AdminHeader />
         {children}
+        <Toaster />
       </ProtectedRoute>
     </AuthProvider>
   );

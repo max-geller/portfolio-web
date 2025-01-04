@@ -31,6 +31,8 @@ import { EditIcon, TrashIcon, ListIcon, GridIcon, UploadIcon, StarIcon } from '@
 import { useKeyboardShortcuts } from '@/app/hooks/useKeyboardShortcuts';
 import { GalleryPreview } from './GalleryPreview';
 import { optimizeImage } from '@/app/utils/imageOptimization';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 // Add type for navigation category
 type NavigationCategory = "stills" | "travel" | "aerial";
@@ -181,7 +183,11 @@ const SortableImage = ({
   );
 };
 
+// Update the base input styles with more balanced padding and reduced height
+const baseInputStyles = "mt-1 block w-full border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-base rounded-none px-4 py-2"
+
 export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<GalleryImageWithMetadata[]>([]);
@@ -429,6 +435,15 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
       await setDoc(docRef, galleryData);
       console.log('Document saved with slug:', formData.slug);
 
+      // After successful save
+      toast.success('Gallery created successfully!', {
+        duration: 5000,
+        position: 'top-center',
+      });
+
+      // Navigate to the manage page
+      router.push('/admin/manage');
+
       if (onSubmit) {
         await onSubmit(galleryData);
       }
@@ -436,6 +451,10 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
     } catch (error) {
       console.error('Error creating gallery:', error);
       setSubmitError('Failed to create gallery');
+      toast.error('Failed to create gallery', {
+        duration: 5000,
+        position: 'top-center',
+      });
     } finally {
       setLoading(false);
     }
@@ -541,8 +560,7 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
-                  transition-colors duration-200"
+                className={`${baseInputStyles}`}
                 required
               />
             </div>
@@ -577,7 +595,7 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
                       type="text"
                       value={formData.slug}
                       readOnly
-                      className="block w-full rounded-md border-gray-300 pl-20 bg-gray-50 sm:text-sm"
+                      className="block w-full pl-20 pr-4 py-2 bg-gray-50 sm:text-base rounded-none border-gray-300"
                     />
                   </div>
                 </div>
@@ -587,7 +605,7 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className={`${baseInputStyles}`}
                     >
                       {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i).map(year => (
                         <option key={year} value={year}>{year}</option>
@@ -604,11 +622,9 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, description: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={`${baseInputStyles}`}
               />
             </div>
 
@@ -619,10 +635,8 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
               <input
                 type="text"
                 value={formData.location}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, location: e.target.value }))
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+                className={`${baseInputStyles}`}
               />
             </div>
           </div>
@@ -638,7 +652,7 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
               <select
                 value={formData.navigation.category}
                 onChange={(e) => handleCategoryChange(e.target.value as NavigationCategory)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={`${baseInputStyles}`}
               >
                 <option value="stills">Stills</option>
                 <option value="travel">Travel</option>
@@ -652,17 +666,14 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
               </label>
               <select
                 value={formData.navigation.primaryCategory}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    navigation: {
-                      ...prev.navigation,
-                      primaryCategory: e.target.value,
-                    },
-                  }))
-                }
-                className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
-                  ${errors.primaryCategory ? 'border-red-300' : 'border-gray-300'}`}
+                onChange={(e) => setFormData((prev) => ({
+                  ...prev,
+                  navigation: {
+                    ...prev.navigation,
+                    primaryCategory: e.target.value,
+                  },
+                }))}
+                className={`${baseInputStyles} ${errors.primaryCategory ? 'border-red-300' : ''}`}
               >
                 <option value="">Select a category</option>
                 {primaryCategoryOptions[formData.navigation.category as keyof typeof primaryCategoryOptions].map(
@@ -692,16 +703,14 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
               <input
                 type="text"
                 value={formData.gear.cameras.join(", ")}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    gear: {
-                      ...prev.gear,
-                      cameras: e.target.value.split(",").map((item) => item.trim()),
-                    },
-                  }))
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                onChange={(e) => setFormData((prev) => ({
+                  ...prev,
+                  gear: {
+                    ...prev.gear,
+                    cameras: e.target.value.split(",").map((item) => item.trim()),
+                  },
+                }))}
+                className={`${baseInputStyles}`}
               />
             </div>
 
@@ -712,16 +721,14 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
               <input
                 type="text"
                 value={formData.gear.lenses.join(", ")}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    gear: {
-                      ...prev.gear,
-                      lenses: e.target.value.split(",").map((item) => item.trim()),
-                    },
-                  }))
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                onChange={(e) => setFormData((prev) => ({
+                  ...prev,
+                  gear: {
+                    ...prev.gear,
+                    lenses: e.target.value.split(",").map((item) => item.trim()),
+                  },
+                }))}
+                className={`${baseInputStyles}`}
               />
             </div>
 
@@ -732,16 +739,14 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
               <input
                 type="text"
                 value={formData.gear.accessories.join(", ")}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    gear: {
-                      ...prev.gear,
-                      accessories: e.target.value.split(",").map((item) => item.trim()),
-                    },
-                  }))
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                onChange={(e) => setFormData((prev) => ({
+                  ...prev,
+                  gear: {
+                    ...prev.gear,
+                    accessories: e.target.value.split(",").map((item) => item.trim()),
+                  },
+                }))}
+                className={`${baseInputStyles}`}
               />
             </div>
           </div>
@@ -894,7 +899,7 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
                   ...prev,
                   date: new Date(e.target.value).toISOString()
                 }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className={`${baseInputStyles}`}
               />
             </div>
             
