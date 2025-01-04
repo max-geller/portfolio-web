@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, writeBatch, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/app/firebase";
 import { toast } from "react-hot-toast";
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -89,13 +89,10 @@ export default function SettingsPage() {
     parentCategory: "stills" | "travel" | "aerial";
   } | null>(null);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
   const fetchCategories = async () => {
+    const categoriesRef = collection(db, "categories");
     try {
-      const querySnapshot = await getDocs(collection(db, "categories"));
+      const querySnapshot = await getDocs(query(categoriesRef, orderBy("order")));
       const items = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -105,6 +102,31 @@ export default function SettingsPage() {
       toast.error("Failed to fetch categories");
     }
   };
+
+  useEffect(() => {
+    const categoriesRef = collection(db, "categories");
+    
+    // Set up real-time listener
+    const unsubscribe = onSnapshot(
+      query(categoriesRef, orderBy("order")),
+      (snapshot) => {
+        const items = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Category[];
+        setCategories(items);
+      },
+      (error) => {
+        toast.error("Failed to sync categories");
+      }
+    );
+
+    // Initial fetch
+    fetchCategories();
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, []);
 
   const handleDelete = async (category: Category) => {
     if (window.confirm(`Are you sure you want to delete ${category.name}?`)) {
@@ -164,26 +186,46 @@ export default function SettingsPage() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = categories.findIndex(cat => cat.id === active.id);
-    const newIndex = categories.findIndex(cat => cat.id === over.id);
+    // Find the items we're working with
+    const activeItem = categories.find(cat => cat.id === active.id);
+    const overItem = categories.find(cat => cat.id === over.id);
+    
+    if (!activeItem || !overItem) return;
 
-    const updatedCategories = arrayMove(categories, oldIndex, newIndex);
-    setCategories(updatedCategories);
+    // Filter to get only the relevant category list (same parent and type)
+    const relevantCategories = categories.filter(cat => 
+      cat.type === activeItem.type && 
+      cat.parentCategory === activeItem.parentCategory &&
+      (activeItem.type === 'primary' ? !cat.parentId : cat.parentId === activeItem.parentId)
+    ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    const oldIndex = relevantCategories.findIndex(cat => cat.id === active.id);
+    const newIndex = relevantCategories.findIndex(cat => cat.id === over.id);
+
+    const reorderedCategories = arrayMove(relevantCategories, oldIndex, newIndex);
 
     // Update orders in Firestore
     const batch = writeBatch(db);
-    updatedCategories.forEach((category, index) => {
+    reorderedCategories.forEach((category, index) => {
       const categoryRef = doc(db, "categories", category.id);
       batch.update(categoryRef, { order: index });
     });
 
     try {
       await batch.commit();
-      toast.success("Order updated successfully");
+      
+      // Update local state
+      const updatedCategories = categories.map(cat => {
+        const reorderedCat = reorderedCategories.find(rc => rc.id === cat.id);
+        if (reorderedCat) {
+          return { ...cat, order: reorderedCategories.indexOf(reorderedCat) };
+        }
+        return cat;
+      });
+      
+      setCategories(updatedCategories);
     } catch (error) {
       toast.error("Failed to update order");
-      // Revert the local state if the update fails
-      setCategories(categories);
     }
   };
 
