@@ -6,7 +6,6 @@ import { BasicInfo } from "./BasicInfo";
 import { NavigationInfo } from "./NavigationInfo";
 import { GearInfo } from "./GearInfo";
 import { ImageUploadSection } from "./ImageUploadSection";
-import { PublishControls } from "./PublishControls";
 import { GalleryDocument, GalleryImageWithMetadata } from "@/app/types/gallery";
 import { db, storage } from "@/app/firebase";
 import {
@@ -16,6 +15,7 @@ import {
   getDocs,
   doc,
   setDoc,
+  addDoc,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -25,7 +25,7 @@ interface GalleryFormProps {
 }
 
 const baseInputStyles =
-  "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
+  "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2";
 
 const initialFormState: GalleryDocument = {
   title: "",
@@ -57,9 +57,7 @@ export default function GalleryForm({
   const [loading, setLoading] = useState(false);
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [manualYearOverride, setManualYearOverride] = useState(false);
-  const [galleryImages, setGalleryImages] = useState<
-    GalleryImageWithMetadata[]
-  >([]);
+  const [galleryImages, setGalleryImages] = useState<GalleryImageWithMetadata[]>([]);
   const [coverImageId, setCoverImageId] = useState<string | null>(null);
 
   const router = useRouter();
@@ -67,18 +65,27 @@ export default function GalleryForm({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title) {
-      newErrors.title = "Title is required";
-    }
-    if (!formData.slug) {
-      newErrors.slug = "Slug is required";
-    }
-    if (!coverImageId) {
-      newErrors.coverImage = "Cover image is required";
-    }
+    if (!formData.title) newErrors.title = "Title is required";
+    if (!formData.slug) newErrors.slug = "Slug is required";
+    if (!coverImageId) newErrors.coverImage = "Cover image is required";
+    if (galleryImages.length === 0) newErrors.images = "At least one image is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const uploadImage = async (image: GalleryImageWithMetadata) => {
+    if (!image.file) return null;
+
+    const storageRef = ref(storage, `galleries/${formData.slug}/${image.file.name}`);
+    await uploadBytes(storageRef, image.file);
+    const url = await getDownloadURL(storageRef);
+
+    return {
+      url,
+      aspectRatio: image.aspectRatio,
+      metadata: image.metadata || {},
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,16 +94,54 @@ export default function GalleryForm({
 
     if (!validateForm()) {
       console.log("Form validation failed", errors);
+      toast.error("Please fix the errors before submitting");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Your form submission logic here
+      // Check if slug exists
+      const slugQuery = query(
+        collection(db, "galleries"),
+        where("slug", "==", formData.slug)
+      );
+      const slugSnapshot = await getDocs(slugQuery);
+      
+      if (!slugSnapshot.empty && !initialData?.id) {
+        setErrors({ slug: "This slug already exists" });
+        toast.error("Slug already exists");
+        return;
+      }
 
-      toast.success("Gallery created successfully!");
-      router.push("/admin/galleries");
+      // Upload images
+      const uploadPromises = galleryImages.map(uploadImage);
+      const uploadedImages = await Promise.all(uploadPromises);
+      const validImages = uploadedImages.filter((img): img is NonNullable<typeof img> => img !== null);
+
+      // Create gallery document
+      const galleryRef = initialData?.id 
+        ? doc(db, "galleries", initialData.id)
+        : doc(collection(db, "galleries"));
+
+      await setDoc(galleryRef, {
+        ...formData,
+        updatedAt: new Date().toISOString(),
+        createdAt: initialData?.id ? initialData.createdAt : new Date().toISOString(),
+      });
+
+      // Add images to subcollection
+      const imagesCollection = collection(db, "galleries", galleryRef.id, "images");
+      
+      for (const image of validImages) {
+        await addDoc(imagesCollection, {
+          ...image,
+          isCover: coverImageId === image.url,
+        });
+      }
+
+      toast.success(initialData?.id ? "Gallery updated successfully!" : "Gallery created successfully!");
+      router.push("/admin/manage");
     } catch (error) {
       console.error("Error creating gallery:", error);
       toast.error("Failed to create gallery");
@@ -122,11 +167,6 @@ export default function GalleryForm({
         <NavigationInfo
           formData={formData}
           setFormData={setFormData}
-          primaryCategoryOptions={{
-            stills: ["Nature", "Portrait", "Street"],
-            travel: ["Cities", "Landscapes", "Culture"],
-            aerial: ["Drone", "Helicopter", "Airplane"],
-          }}
           baseInputStyles={baseInputStyles}
         />
 

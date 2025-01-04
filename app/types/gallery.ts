@@ -59,3 +59,21 @@ export interface GalleryDocument {
 }
 
 export type NavigationCategory = "stills" | "travel" | "aerial";
+
+export type PrimaryCategoryOptions = {
+  stills: string[];
+  travel: string[];
+  aerial: string[];
+};
+
+export type PrimaryCategoryMap = {
+  stills: ['Landscape', 'Portrait', 'Street', 'Nature', 'Architecture'];
+  travel: ['Asia', 'Europe', 'Americas', 'Africa', 'Oceania'];
+  aerial: ['Drone', 'Aircraft'];
+};
+
+export interface NavigationInfoProps {
+  formData: Pick<GalleryDocument, 'navigation'>;
+  setFormData: (data: (prev: GalleryDocument) => GalleryDocument) => void;
+  baseInputStyles: string;
+}

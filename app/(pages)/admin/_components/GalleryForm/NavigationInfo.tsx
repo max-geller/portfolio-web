@@ -1,17 +1,15 @@
 import React from 'react';
-import { NavigationCategory, GalleryDocument } from '@/app/types/gallery';
+import { GalleryDocument, NavigationCategory, NavigationInfoProps } from '@/app/types/gallery';
 
-interface NavigationInfoProps {
-  formData: Pick<GalleryDocument, 'navigation'>;
-  setFormData: (data: (prev: GalleryDocument) => GalleryDocument) => void;
-  primaryCategoryOptions: Record<NavigationCategory, string[]>;
-  baseInputStyles: string;
-}
+const PRIMARY_CATEGORY_OPTIONS = {
+  stills: ['Landscape', 'Portrait', 'Street', 'Nature', 'Architecture'],
+  travel: ['Asia', 'Europe', 'Americas', 'Africa', 'Oceania'],
+  aerial: ['Drone', 'Aircraft']
+} as const;
 
 export function NavigationInfo({
   formData,
   setFormData,
-  primaryCategoryOptions,
   baseInputStyles
 }: NavigationInfoProps) {
   const handleCategoryChange = (category: NavigationCategory) => {
@@ -55,24 +53,10 @@ export function NavigationInfo({
             className={baseInputStyles}
           >
             <option value="">Select a category</option>
-            {primaryCategoryOptions[formData.navigation.category].map(option => (
+            {PRIMARY_CATEGORY_OPTIONS[formData.navigation.category].map(option => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
-        </div>
-
-        {/* Secondary Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Secondary Category</label>
-          <input
-            type="text"
-            value={formData.navigation.secondaryCategory}
-            onChange={(e) => setFormData((prev: GalleryDocument) => ({
-              ...prev,
-              navigation: { ...prev.navigation, secondaryCategory: e.target.value }
-            }))}
-            className={baseInputStyles}
-          />
         </div>
       </div>
     </div>
