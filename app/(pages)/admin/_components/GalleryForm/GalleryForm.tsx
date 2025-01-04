@@ -144,31 +144,28 @@ export default function GalleryForm({
       const imagesCollection = collection(db, "galleries", formData.slug, "images");
       
       for (const image of validImages) {
-        // Clean metadata by removing undefined/null values
-        const cleanMetadata = {
-          camera: image.metadata?.camera?.make || image.metadata?.camera?.model ? {
-            make: image.metadata.camera.make || '',
-            model: image.metadata.camera.model || ''
-          } : null,
-          lens: image.metadata?.lens?.make || image.metadata?.lens?.model ? {
-            make: image.metadata.lens.make || '',
-            model: image.metadata.lens.model || ''
-          } : null,
-          settings: {
-            aperture: image.metadata?.settings?.aperture || null,
-            shutterSpeed: image.metadata?.settings?.shutterSpeed || null,
-            iso: image.metadata?.settings?.iso || null,
-            focalLength: image.metadata?.settings?.focalLength || null,
-          },
-          dimensions: image.metadata?.dimensions || null,
-          datetime: image.metadata?.datetime || null
-        };
-
         const imageMetadata = {
           url: image.url,
           aspectRatio: image.aspectRatio,
           isCover: image.url === coverImage.url,
-          metadata: cleanMetadata
+          metadata: {
+            camera: image.metadata?.camera ? {
+              make: image.metadata.camera.make,
+              model: image.metadata.camera.model
+            } : null,
+            lens: image.metadata?.lens ? {
+              make: image.metadata.lens.make,
+              model: image.metadata.lens.model
+            } : null,
+            settings: image.metadata?.settings ? {
+              aperture: image.metadata.settings.aperture,
+              shutterSpeed: image.metadata.settings.shutterSpeed,
+              iso: image.metadata.settings.iso,
+              focalLength: image.metadata.settings.focalLength
+            } : null,
+            dimensions: image.metadata?.dimensions || null,
+            datetime: image.metadata?.datetime || null
+          }
         };
 
         await addDoc(imagesCollection, imageMetadata);

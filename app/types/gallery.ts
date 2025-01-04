@@ -24,6 +24,27 @@ export interface GalleryImage {
   shutterSpeed?: string;
   aperture?: string;
   iso?: string;
+  metadata?: {
+    camera?: {
+      make: string;
+      model: string;
+    };
+    lens?: {
+      make: string;
+      model: string;
+    };
+    settings?: {
+      focalLength: number;
+      aperture: number;
+      shutterSpeed: number;
+      iso: number;
+    };
+    dimensions?: {
+      width: number;
+      height: number;
+    };
+    datetime?: Date;
+  };
 }
 
 interface ExifMetadata {

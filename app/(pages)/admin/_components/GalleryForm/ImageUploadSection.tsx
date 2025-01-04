@@ -120,24 +120,23 @@ export function ImageUploadSection({
         const img = await createImageBitmap(file);
         const aspectRatio = img.width / img.height;
         const exifData = await extractEquipmentFromExif(file);
-        const previewUrl = URL.createObjectURL(file);
 
-        // Format the metadata to match ImageMetadata interface
-        const formattedMetadata = {
-          camera: exifData?.camera ? `${exifData.camera.make} ${exifData.camera.model}`.trim() : '',
-          lens: exifData?.lens ? `${exifData.lens.make} ${exifData.lens.model}`.trim() : '',
-          shutterSpeed: exifData?.settings?.shutterSpeed ? `1/${Math.round(1/exifData.settings.shutterSpeed)}` : '',
-          aperture: exifData?.settings?.aperture ? `f/${exifData.settings.aperture}` : '',
-          iso: exifData?.settings?.iso?.toString() || '',
-          focalLength: exifData?.settings?.focalLength ? `${Math.round(exifData.settings.focalLength)}mm` : '',
-          dimensions: exifData?.dimensions,
-        };
+        const previewUrl = URL.createObjectURL(file);
 
         const newImage: GalleryImageWithMetadata = {
           file,
           previewUrl,
           aspectRatio,
-          metadata: formattedMetadata
+          metadata: {
+            camera: exifData?.camera || null,
+            lens: exifData?.lens || null,
+            settings: exifData?.settings || null,
+            dimensions: exifData?.dimensions || null,
+            datetime: exifData?.datetime || null,
+            filename: file.name,
+            filesize: file.size,
+            type: file.type
+          }
         };
 
         setGalleryImages(prev => [...prev, newImage]);
