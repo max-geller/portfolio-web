@@ -65,6 +65,7 @@ export default function GalleryForm({
 
     if (!formData.title) newErrors.title = "Title is required";
     if (!formData.slug) newErrors.slug = "Slug is required";
+    if (!formData.navigation.primaryCategory) newErrors.primaryCategory = "Primary category is required";
     if (!coverImageId) newErrors.coverImage = "Cover image is required";
     if (galleryImages.length === 0) newErrors.images = "At least one image is required";
 
@@ -199,6 +200,7 @@ export default function GalleryForm({
           formData={formData}
           setFormData={setFormData}
           baseInputStyles={baseInputStyles}
+          errors={errors}
         />
 
         <GearInfo
