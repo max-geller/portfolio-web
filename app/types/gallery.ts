@@ -26,10 +26,36 @@ export interface GalleryImage {
   iso?: string;
 }
 
-export interface GalleryImageWithMetadata extends GalleryImage {
-  metadata?: ImageMetadata;
+interface ExifMetadata {
+  camera?: {
+    make: string;
+    model: string;
+  };
+  lens?: {
+    make: string;
+    model: string;
+  };
+  settings?: {
+    focalLength: number;
+    aperture: number;
+    shutterSpeed: number;
+    iso: number;
+  };
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  datetime?: Date;
+  filename: string;
+  filesize: number;
+  type: string;
+}
+
+export interface GalleryImageWithMetadata {
   file?: File;
-  previewUrl?: string;
+  previewUrl: string;
+  aspectRatio: number;
+  metadata?: ExifMetadata;
 }
 
 // Gallery metadata

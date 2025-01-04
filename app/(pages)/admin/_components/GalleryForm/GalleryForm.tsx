@@ -144,10 +144,24 @@ export default function GalleryForm({
       const imagesCollection = collection(db, "galleries", formData.slug, "images");
       
       for (const image of validImages) {
-        await addDoc(imagesCollection, {
-          ...image,
+        // Format the EXIF data for storage
+        const imageMetadata = {
+          url: image.url,
+          aspectRatio: image.aspectRatio,
           isCover: image.url === coverImage.url,
-        });
+          camera: image.metadata?.camera ? `${image.metadata.camera.make} ${image.metadata.camera.model}`.trim() : null,
+          lens: image.metadata?.lens ? `${image.metadata.lens.make} ${image.metadata.lens.model}`.trim() : null,
+          settings: {
+            aperture: image.metadata?.settings?.aperture ? `f/${image.metadata.settings.aperture}` : null,
+            shutterSpeed: image.metadata?.settings?.shutterSpeed ? `1/${1/image.metadata.settings.shutterSpeed}` : null,
+            iso: image.metadata?.settings?.iso || null,
+            focalLength: image.metadata?.settings?.focalLength ? `${image.metadata.settings.focalLength}mm` : null,
+          },
+          dimensions: image.metadata?.dimensions || null,
+          datetime: image.metadata?.datetime || null,
+        };
+
+        await addDoc(imagesCollection, imageMetadata);
       }
 
       toast.success(initialData?.id ? "Gallery updated successfully!" : "Gallery created successfully!");

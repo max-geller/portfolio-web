@@ -21,6 +21,8 @@ import { GalleryPreview } from '../GalleryPreview';
 import { optimizeImage } from '@/app/utils/imageOptimization';
 import { SortableImage } from './SortableImage';
 import { GalleryImageWithMetadata } from '@/app/types/gallery';
+import exifr from 'exifr';
+import { toast } from 'react-hot-toast';
 
 interface ImageUploadSectionProps {
   galleryImages: GalleryImageWithMetadata[];
@@ -28,6 +30,45 @@ interface ImageUploadSectionProps {
   coverImageId: string | null;
   setCoverImageId: (id: string | null) => void;
 }
+
+const extractEquipmentFromExif = async (file: File) => {
+  try {
+    const exif = await exifr.parse(file, true);
+    if (!exif) return null;
+
+    // Get dimensions from the image file directly
+    const img = await createImageBitmap(file);
+    const dimensions = {
+      width: img.width,
+      height: img.height
+    };
+
+    return {
+      camera: {
+        make: exif.Make || '',
+        model: exif.Model || '',
+      },
+      lens: {
+        make: exif.LensMake || '',
+        model: exif.LensModel || '',
+      },
+      settings: {
+        focalLength: exif.FocalLength,
+        aperture: exif.FNumber,
+        shutterSpeed: exif.ExposureTime,
+        iso: exif.ISO,
+      },
+      dimensions,
+      datetime: exif.DateTimeOriginal,
+      filename: file.name,
+      filesize: file.size,
+      type: file.type,
+    };
+  } catch (error) {
+    console.error('Error reading EXIF:', error);
+    return null;
+  }
+};
 
 export function ImageUploadSection({
   galleryImages,
@@ -71,37 +112,56 @@ export function ImageUploadSection({
     setDraggedImage(null);
   };
 
-  const handleImageFiles = async (files: File[]) => {
-    const newImages: GalleryImageWithMetadata[] = await Promise.all(
-      files.map(async (file) => {
-        const optimizedFile = await optimizeImage(file);
-        const previewUrl = URL.createObjectURL(optimizedFile);
-        
-        // Create a temporary aspect ratio until the image is loaded
-        const img = new Image();
-        await new Promise((resolve) => {
-          img.onload = resolve;
-          img.src = previewUrl;
-        });
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    for (const file of files) {
+      try {
+        // Get image dimensions
+        const img = await createImageBitmap(file);
         const aspectRatio = img.width / img.height;
-
-        return {
-          file: optimizedFile,
+        
+        // Extract EXIF data
+        const exifData = await extractEquipmentFromExif(file);
+        
+        // Create preview URL
+        const previewUrl = URL.createObjectURL(file);
+        
+        const newImage: GalleryImageWithMetadata = {
+          file,
           previewUrl,
-          url: previewUrl, // temporary URL until uploaded
           aspectRatio,
-          metadata: {},
+          metadata: {
+            ...exifData,
+            filename: file.name,
+            filesize: file.size,
+            type: file.type,
+          },
         };
-      })
-    );
 
-    setGalleryImages([...galleryImages, ...newImages]);
+        setGalleryImages(prev => [...prev, newImage]);
+
+        // If this is the first image, set it as cover
+        if (!coverImageId) {
+          setCoverImageId(previewUrl);
+        }
+
+        // Optional: Log found equipment
+        if (exifData?.camera || exifData?.lens) {
+          toast.success(`Found camera: ${exifData.camera?.model || 'Unknown'}, lens: ${exifData.lens?.model || 'Unknown'}`);
+        }
+
+      } catch (error) {
+        console.error('Error processing image:', error);
+        toast.error(`Failed to process ${file.name}`);
+      }
+    }
   };
 
   const handleImageDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
-    await handleImageFiles(files);
+    await handleFileChange({ target: { files } });
   };
 
   return (
@@ -197,7 +257,7 @@ export function ImageUploadSection({
           type="file"
           multiple
           accept="image/*"
-          onChange={(e) => handleImageFiles(Array.from(e.target.files || []))}
+          onChange={handleFileChange}
           className="hidden"
           id="image-upload"
         />

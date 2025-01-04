@@ -91,6 +91,27 @@ export function ImageMetadataForm({ image, index, onUpdate }: ImageMetadataFormP
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
+
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Width</label>
+          <input
+            type="text"
+            value={image.metadata?.dimensions?.width || ''}
+            readOnly
+            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Height</label>
+          <input
+            type="text"
+            value={image.metadata?.dimensions?.height || ''}
+            readOnly
+            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+      </div>
     </motion.div>
   );
 }
