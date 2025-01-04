@@ -435,6 +435,30 @@ export default function GalleryForm({ initialData, onSubmit }: GalleryFormProps)
       await setDoc(docRef, galleryData);
       console.log('Document saved with slug:', formData.slug);
 
+      // Create the images subcollection after saving the main document
+      const imagesCollectionRef = collection(docRef, 'images');
+      
+      // Save each image to the subcollection
+      const imageDocPromises = uploadedImages
+        .filter(Boolean)
+        .map(async (image, index) => {
+          const imageDoc = {
+            url: image.url,
+            photoUrl: image.url,
+            title: image.title || '',
+            metadata: image.metadata || {},
+            order: index,
+            isCover: image.isCover,
+            aspectRatio: 1,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          await addDoc(imagesCollectionRef, imageDoc);
+        });
+
+      await Promise.all(imageDocPromises);
+
       // After successful save
       toast.success('Gallery created successfully!', {
         duration: 5000,
