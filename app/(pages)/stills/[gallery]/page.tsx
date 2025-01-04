@@ -14,27 +14,32 @@ import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 
 const categorizeImages = (images: GalleryImage[]): GalleryImage[] => {
-  // Calculate average resolution for the gallery
-  const resolutions = images.map(
-    (img) =>
-      img.metadata?.dimensions?.width * img.metadata?.dimensions?.height || 0
-  );
-  const sortedResolutions = [...resolutions].sort((a, b) => a - b);
-
-  // Define thresholds for categorization
-  const lowerThird = sortedResolutions[Math.floor(resolutions.length * 0.33)];
-  const upperThird = sortedResolutions[Math.floor(resolutions.length * 0.66)];
-
   return images.map((image) => {
-    const resolution =
-      image.metadata?.dimensions?.width * image.metadata?.dimensions?.height ||
-      0;
-    let displaySize: "small" | "medium" | "large" = "medium";
+    const aspectRatio = image.metadata?.dimensions?.width / image.metadata?.dimensions?.height || 1;
+    
+    let gridSpan = {
+      cols: 4,  // default size (1/3 width)
+      rows: 1
+    };
 
-    if (resolution <= lowerThird) displaySize = "small";
-    else if (resolution >= upperThird) displaySize = "large";
+    // Wide/Panoramic images
+    if (aspectRatio > 1.8) {
+      gridSpan = { cols: 8, rows: 1 }; // 2/3 width
+    } 
+    // Standard landscape images
+    else if (aspectRatio > 1.3) {
+      gridSpan = { cols: 6, rows: 1 }; // 1/2 width
+    }
+    // Tall images (portrait orientation)
+    else if (aspectRatio < 0.75) {
+      gridSpan = { cols: 4, rows: 2 }; // 1/3 width but taller
+    }
+    // Square-ish images
+    else {
+      gridSpan = { cols: 4, rows: 1 }; // 1/3 width
+    }
 
-    return { ...image, displaySize };
+    return { ...image, gridSpan };
   });
 };
 
@@ -145,7 +150,7 @@ export default function StillsGalleryPage() {
   if (!gallery) return <div className="text-center p-8">Loading...</div>;
 
   return (
-    <main className="max-w-8xl mx-auto px-4 py-8">
+    <main className="max-w-[2000px] mx-auto px-8 py-8">
       {/* Gallery Header */}
       <div className="mb-12">
         <h1 className="text-4xl font-bold mb-4">{gallery.title}</h1>
@@ -161,20 +166,22 @@ export default function StillsGalleryPage() {
       </div>
 
       {/* Image Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 auto-rows-[300px] mb-4">
+      <div className="grid grid-cols-12 auto-rows-[400px] gap-6">
         {images.map((image, index) => {
-          const cols =
-            image.displaySize === "large"
-              ? 6
-              : image.displaySize === "medium"
-              ? 4
-              : 3;
+          const colSpanClass = image.gridSpan?.cols === 8 
+            ? 'col-span-8' 
+            : image.gridSpan?.cols === 6 
+            ? 'col-span-6' 
+            : 'col-span-4';
+
+          const rowSpanClass = image.gridSpan?.rows === 2 
+            ? 'row-span-2' 
+            : 'row-span-1';
 
           return (
             <div
               key={index}
-              className={`relative cursor-pointer group col-span-12 sm:col-span-6 lg:col-span-${cols} 
-                ${image.displaySize === "large" ? "row-span-2" : ""}`}
+              className={`relative cursor-pointer group ${colSpanClass} ${rowSpanClass}`}
               onClick={() => {
                 setPhotoIndex(index);
                 setIsOpen(true);
@@ -186,7 +193,7 @@ export default function StillsGalleryPage() {
                 fill
                 className="object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
                 sizes={`(max-width: 768px) 100vw, (max-width: 1200px) 50vw, ${
-                  cols * 8.33
+                  (image.gridSpan?.cols || 4) * 8.33
                 }vw`}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg">
