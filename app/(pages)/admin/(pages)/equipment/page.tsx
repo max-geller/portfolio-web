@@ -12,6 +12,8 @@ export default function EquipmentPage() {
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [selectedType, setSelectedType] = useState<EquipmentItem['type']>('camera');
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingItem, setEditingItem] = useState<EquipmentItem | null>(null);
 
   const [newItem, setNewItem] = useState<Omit<EquipmentItem, 'id'>>({
     name: '',
@@ -77,6 +79,30 @@ export default function EquipmentPage() {
     }
   };
 
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+
+    try {
+      await updateDoc(doc(db, "equipment", editingItem.id), {
+        name: editingItem.name,
+        brand: editingItem.brand,
+        model: editingItem.model,
+        type: editingItem.type,
+        specs: editingItem.specs,
+        notes: editingItem.notes,
+        dateAcquired: editingItem.dateAcquired,
+        isActive: editingItem.isActive,
+      });
+      toast.success("Equipment updated successfully");
+      setIsEditing(false);
+      setEditingItem(null);
+      fetchEquipment();
+    } catch (error) {
+      toast.error("Failed to update equipment");
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -106,16 +132,27 @@ export default function EquipmentPage() {
                       <h3 className="font-medium">{item.name}</h3>
                       <p className="text-sm text-gray-500">{item.brand} {item.model}</p>
                     </div>
-                    <button
-                      onClick={() => toggleActive(item)}
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        item.isActive
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {item.isActive ? 'Active' : 'Inactive'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingItem(item);
+                          setIsEditing(true);
+                        }}
+                        className="px-3 py-1 rounded-md text-sm bg-indigo-100 text-indigo-800 hover:bg-indigo-200"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => toggleActive(item)}
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          item.isActive
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {item.isActive ? 'Active' : 'Inactive'}
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>
@@ -222,6 +259,115 @@ export default function EquipmentPage() {
                   className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                 >
                   Add Equipment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Equipment Modal */}
+      {isEditing && editingItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-semibold mb-4">Edit Equipment</h2>
+            <form onSubmit={handleEdit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Type</label>
+                <select
+                  value={editingItem.type}
+                  onChange={(e) => setEditingItem(prev => prev ? ({
+                    ...prev,
+                    type: e.target.value as EquipmentItem['type']
+                  }) : null)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  {EQUIPMENT_TYPES.map(type => (
+                    <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Brand</label>
+                <input
+                  type="text"
+                  value={editingItem.brand}
+                  onChange={(e) => setEditingItem(prev => prev ? ({
+                    ...prev,
+                    brand: e.target.value
+                  }) : null)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Model</label>
+                <input
+                  type="text"
+                  value={editingItem.model}
+                  onChange={(e) => setEditingItem(prev => prev ? ({
+                    ...prev,
+                    model: e.target.value
+                  }) : null)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem(prev => prev ? ({
+                    ...prev,
+                    name: e.target.value
+                  }) : null)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Notes</label>
+                <textarea
+                  value={editingItem.notes}
+                  onChange={(e) => setEditingItem(prev => prev ? ({
+                    ...prev,
+                    notes: e.target.value
+                  }) : null)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date Acquired</label>
+                <input
+                  type="date"
+                  value={editingItem.dateAcquired}
+                  onChange={(e) => setEditingItem(prev => prev ? ({
+                    ...prev,
+                    dateAcquired: e.target.value
+                  }) : null)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditingItem(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  Save Changes
                 </button>
               </div>
             </form>
