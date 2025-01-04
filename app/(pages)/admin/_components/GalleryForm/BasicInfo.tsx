@@ -1,15 +1,9 @@
 import React from 'react';
+import { GalleryDocument } from '@/app/types/gallery';
 
 interface BasicInfoProps {
-  formData: {
-    title: string;
-    slug: string;
-    description: string;
-    location: string;
-    date: string;
-    isPublished: boolean;
-  };
-  setFormData: (data: any) => void;
+  formData: Pick<GalleryDocument, 'title' | 'slug' | 'description' | 'location' | 'date' | 'isPublished'>;
+  setFormData: (data: (prev: GalleryDocument) => GalleryDocument) => void;
   errors: {
     title?: string;
     slug?: string;
@@ -41,7 +35,10 @@ export function BasicInfo({
           <input
             type="text"
             value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            onChange={(e) => setFormData((prev: GalleryDocument) => ({
+              ...prev,
+              title: e.target.value
+            }))}
             className={`${baseInputStyles} ${errors.title ? 'border-red-500' : ''}`}
             required
           />
@@ -74,7 +71,10 @@ export function BasicInfo({
             <input
               type="text"
               value={formData.slug}
-              onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+              onChange={(e) => setFormData((prev: GalleryDocument) => ({
+                ...prev,
+                slug: e.target.value
+              }))}
               className={`${baseInputStyles} ${errors.slug ? 'border-red-500' : ''}`}
               required
             />
@@ -92,7 +92,10 @@ export function BasicInfo({
           <label className="block text-sm font-medium text-gray-700">Description</label>
           <textarea
             value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            onChange={(e) => setFormData((prev: GalleryDocument) => ({
+              ...prev,
+              description: e.target.value
+            }))}
             rows={4}
             className={baseInputStyles}
           />
@@ -104,7 +107,10 @@ export function BasicInfo({
           <input
             type="text"
             value={formData.location}
-            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+            onChange={(e) => setFormData((prev: GalleryDocument) => ({
+              ...prev,
+              location: e.target.value
+            }))}
             className={baseInputStyles}
           />
         </div>
@@ -121,7 +127,7 @@ export function BasicInfo({
                 type="date"
                 id="date"
                 value={formData.date.split('T')[0]}
-                onChange={(e) => setFormData(prev => ({
+                onChange={(e) => setFormData((prev: GalleryDocument) => ({
                   ...prev,
                   date: new Date(e.target.value).toISOString()
                 }))}
@@ -137,7 +143,7 @@ export function BasicInfo({
                 type="checkbox"
                 id="isPublished"
                 checked={formData.isPublished}
-                onChange={(e) => setFormData(prev => ({
+                onChange={(e) => setFormData((prev: GalleryDocument) => ({
                   ...prev,
                   isPublished: e.target.checked
                 }))}

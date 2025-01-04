@@ -55,8 +55,8 @@ export function SortableImage({
           {...listeners}
         >
           <img
-            src={image.previewUrl}
-            alt={image.title || `Image ${index + 1}`}
+            src={image.previewUrl || image.url}
+            alt={image.metadata?.description || `Image ${index + 1}`}
             className="object-cover w-full h-full rounded-lg"
           />
         </div>
@@ -65,6 +65,7 @@ export function SortableImage({
         <div className={viewMode === 'grid' ? 'mt-4' : 'flex-1'}>
           <ImageMetadataForm
             image={image}
+            index={index}
             onUpdate={onMetadataUpdate}
           />
         </div>

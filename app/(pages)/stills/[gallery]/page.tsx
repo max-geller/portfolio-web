@@ -25,14 +25,17 @@ export default function StillsGalleryPage() {
 
         if (!querySnapshot.empty) {
           const docSnap = querySnapshot.docs[0];
-          const data = docSnap.data() as GalleryDocument;
-          setGallery({ ...data, id: docSnap.id });
+          const galleryData = docSnap.data() as Omit<GalleryDocument, 'id'>;
+          setGallery({ ...galleryData, id: docSnap.id });
 
           // Fetch images subcollection
           const imagesCollection = collection(db, 'galleries', docSnap.id, 'images');
           const imagesSnapshot = await getDocs(imagesCollection);
           const imagesData = imagesSnapshot.docs.map(doc => ({
-            ...doc.data()
+            ...doc.data(),
+            displaySize: doc.data().displaySize || 'small',
+            title: doc.data().title || '',
+            caption: doc.data().caption || '',
           } as GalleryImage));
           setImages(imagesData);
         }
@@ -127,14 +130,14 @@ export default function StillsGalleryPage() {
             >
               <Image
                 src={image.url}
-                alt={image.title}
+                alt={image.title || `Gallery image ${index + 1}`}
                 fill
                 className="object-cover"
                 sizes={`(max-width: 768px) 100vw, ${cols * 8.33}vw`}
               />
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300">
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h3 className="text-lg font-semibold">{image.title}</h3>
+                  {image.title && <h3 className="text-lg font-semibold">{image.title}</h3>}
                   {image.caption && <p className="text-sm">{image.caption}</p>}
                   <div className="text-xs mt-2">
                     {image.camera && <span className="mr-3">{image.camera}</span>}
@@ -156,8 +159,8 @@ export default function StillsGalleryPage() {
         index={photoIndex}
         slides={images.map(img => ({
           src: img.url,
-          title: img.title,
-          description: img.caption
+          title: img.title || '',
+          description: img.caption || ''
         }))}
       />
     </main>

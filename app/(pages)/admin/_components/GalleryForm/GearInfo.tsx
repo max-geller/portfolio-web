@@ -1,14 +1,9 @@
 import React from 'react';
+import { GalleryDocument } from '@/app/types/gallery';
 
 interface GearInfoProps {
-  formData: {
-    gear: {
-      cameras: string[];
-      lenses: string[];
-      accessories: string[];
-    };
-  };
-  setFormData: (data: any) => void;
+  formData: Pick<GalleryDocument, 'gear'>;
+  setFormData: (data: (prev: GalleryDocument) => GalleryDocument) => void;
   baseInputStyles: string;
 }
 
@@ -25,7 +20,7 @@ export function GearInfo({ formData, setFormData, baseInputStyles }: GearInfoPro
           <input
             type="text"
             value={formData.gear.cameras.join(", ")}
-            onChange={(e) => setFormData(prev => ({
+            onChange={(e) => setFormData((prev: GalleryDocument) => ({
               ...prev,
               gear: {
                 ...prev.gear,
@@ -44,7 +39,7 @@ export function GearInfo({ formData, setFormData, baseInputStyles }: GearInfoPro
           <input
             type="text"
             value={formData.gear.lenses.join(", ")}
-            onChange={(e) => setFormData(prev => ({
+            onChange={(e) => setFormData((prev: GalleryDocument) => ({
               ...prev,
               gear: {
                 ...prev.gear,
@@ -63,7 +58,7 @@ export function GearInfo({ formData, setFormData, baseInputStyles }: GearInfoPro
           <input
             type="text"
             value={formData.gear.accessories.join(", ")}
-            onChange={(e) => setFormData(prev => ({
+            onChange={(e) => setFormData((prev: GalleryDocument) => ({
               ...prev,
               gear: {
                 ...prev.gear,

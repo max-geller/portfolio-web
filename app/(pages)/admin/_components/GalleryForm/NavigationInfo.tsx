@@ -1,15 +1,9 @@
 import React from 'react';
-import { NavigationCategory } from '@/app/types/gallery';
+import { NavigationCategory, GalleryDocument } from '@/app/types/gallery';
 
 interface NavigationInfoProps {
-  formData: {
-    navigation: {
-      category: NavigationCategory;
-      primaryCategory: string;
-      secondaryCategory: string;
-    };
-  };
-  setFormData: (data: any) => void;
+  formData: Pick<GalleryDocument, 'navigation'>;
+  setFormData: (data: (prev: GalleryDocument) => GalleryDocument) => void;
   primaryCategoryOptions: Record<NavigationCategory, string[]>;
   baseInputStyles: string;
 }
@@ -21,7 +15,7 @@ export function NavigationInfo({
   baseInputStyles
 }: NavigationInfoProps) {
   const handleCategoryChange = (category: NavigationCategory) => {
-    setFormData(prev => ({
+    setFormData((prev: GalleryDocument) => ({
       ...prev,
       navigation: {
         ...prev.navigation,
@@ -54,7 +48,7 @@ export function NavigationInfo({
           <label className="block text-sm font-medium text-gray-700">Primary Category</label>
           <select
             value={formData.navigation.primaryCategory}
-            onChange={(e) => setFormData(prev => ({
+            onChange={(e) => setFormData((prev: GalleryDocument) => ({
               ...prev,
               navigation: { ...prev.navigation, primaryCategory: e.target.value }
             }))}
@@ -73,7 +67,7 @@ export function NavigationInfo({
           <input
             type="text"
             value={formData.navigation.secondaryCategory}
-            onChange={(e) => setFormData(prev => ({
+            onChange={(e) => setFormData((prev: GalleryDocument) => ({
               ...prev,
               navigation: { ...prev.navigation, secondaryCategory: e.target.value }
             }))}

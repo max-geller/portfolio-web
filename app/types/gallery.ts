@@ -1,21 +1,33 @@
 // Gallery image metadata
-export interface GalleryImage {
-  url: string;
-  aspectRatio: number;
-  title: string;
-  caption?: string;
+export interface ImageMetadata {
   camera?: string;
   lens?: string;
   shutterSpeed?: string;
   aperture?: string;
   iso?: string;
-  date?: Date;
-  isPublished?: boolean;
-  displaySize: 'small' | 'medium' | 'large';
+  focalLength?: string;
+  description?: string;
+}
+
+export interface GalleryImage {
+  url: string;
+  aspectRatio: number;
+  displaySize?: 'small' | 'medium' | 'large';
   gridSpan?: {
     rows: number;
-    cols: number;
   };
+  title?: string;
+  caption?: string;
+  camera?: string;
+  shutterSpeed?: string;
+  aperture?: string;
+  iso?: string;
+}
+
+export interface GalleryImageWithMetadata extends GalleryImage {
+  metadata?: ImageMetadata;
+  file?: File;
+  previewUrl?: string;
 }
 
 // Gallery metadata
@@ -27,17 +39,23 @@ export interface GalleryNavigation {
 }
 
 export interface GalleryDocument {
-  id: string;
-  slug: string;
+  id?: string;
   title: string;
-  description?: string;
-  location?: string;
-  photoUrl: string;
-  date: Date;
-  navigation: GalleryNavigation;
-  gear?: {
-    cameras?: string[];
-    lenses?: string[];
-    accessories?: string[];
+  slug: string;
+  description: string;
+  location: string;
+  date: string;
+  isPublished: boolean;
+  navigation: {
+    category: NavigationCategory;
+    primaryCategory: string;
+    secondaryCategory: string;
+  };
+  gear: {
+    cameras: string[];
+    lenses: string[];
+    accessories: string[];
   };
 }
+
+export type NavigationCategory = "stills" | "travel" | "aerial";

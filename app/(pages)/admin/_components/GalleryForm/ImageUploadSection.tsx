@@ -49,7 +49,7 @@ export function ImageUploadSection({
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const draggedItem = galleryImages.find(
-      (image, index) => (image.previewUrl || index.toString()) === active.id
+      (image) => image.previewUrl === active.id
     );
     setDraggedImage(draggedItem || null);
   };
@@ -59,10 +59,10 @@ export function ImageUploadSection({
     
     if (over && active.id !== over.id) {
       const oldIndex = galleryImages.findIndex(
-        (image, index) => (image.previewUrl || index.toString()) === active.id
+        (image) => image.previewUrl === active.id
       );
       const newIndex = galleryImages.findIndex(
-        (image, index) => (image.previewUrl || index.toString()) === over.id
+        (image) => image.previewUrl === over.id
       );
       
       setGalleryImages(arrayMove(galleryImages, oldIndex, newIndex));
@@ -72,12 +72,24 @@ export function ImageUploadSection({
   };
 
   const handleImageFiles = async (files: File[]) => {
-    const newImages = await Promise.all(
+    const newImages: GalleryImageWithMetadata[] = await Promise.all(
       files.map(async (file) => {
         const optimizedFile = await optimizeImage(file);
+        const previewUrl = URL.createObjectURL(optimizedFile);
+        
+        // Create a temporary aspect ratio until the image is loaded
+        const img = new Image();
+        await new Promise((resolve) => {
+          img.onload = resolve;
+          img.src = previewUrl;
+        });
+        const aspectRatio = img.width / img.height;
+
         return {
           file: optimizedFile,
-          previewUrl: URL.createObjectURL(optimizedFile),
+          previewUrl,
+          url: previewUrl, // temporary URL until uploaded
+          aspectRatio,
           metadata: {},
         };
       })
