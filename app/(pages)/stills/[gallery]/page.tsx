@@ -7,6 +7,11 @@ import Image from "next/image";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import { GalleryDocument, GalleryImage } from "@/app/types/gallery";
+import "yet-another-react-lightbox/plugins/captions.css";
+import "yet-another-react-lightbox/plugins/thumbnails.css";
+import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
+import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
+import Captions from "yet-another-react-lightbox/plugins/captions";
 
 const categorizeImages = (images: GalleryImage[]): GalleryImage[] => {
   // Calculate average resolution for the gallery
@@ -200,27 +205,47 @@ export default function StillsGalleryPage() {
         open={isOpen}
         close={() => setIsOpen(false)}
         index={photoIndex}
+        plugins={[Captions, Thumbnails, Slideshow]}
         slides={images.map((img) => ({
           src: img.url,
-        }))}
-        render={{
-          caption: () => (
-            <ImageCaption metadata={images[photoIndex].metadata} />
+          title: img.title,
+          description: (
+            <div className="flex flex-col gap-2 text-center">
+              {img.metadata?.camera?.make && img.metadata?.camera?.model && (
+                <div className="text-sm font-bold text-white">
+                  📸{" "}
+                  {`${img.metadata.camera.make} ${img.metadata.camera.model}`.trim()}
+                </div>
+              )}
+              {img.metadata?.lens?.make && img.metadata?.lens?.model && (
+                <div className="text-sm text-white">
+                  🔭{" "}
+                  {`${img.metadata.lens.make} ${img.metadata.lens.model}`.trim()}
+                </div>
+              )}
+              <div className="flex justify-center gap-6 text-xs text-white">
+                {img.metadata?.settings?.shutterSpeed && (
+                  <span>
+                    {" "}
+                    1/{Math.round(1 / img.metadata.settings.shutterSpeed)}s
+                  </span>
+                )}
+                {img.metadata?.settings?.aperture && (
+                  <span> f/{img.metadata.settings.aperture}</span>
+                )}
+                {img.metadata?.settings?.iso && (
+                  <span> ISO {img.metadata.settings.iso}</span>
+                )}
+              </div>
+            </div>
           ),
-          iconNext: () => <span className="text-white text-4xl">→</span>,
-          iconPrev: () => <span className="text-white text-4xl">←</span>,
-        }}
-        carousel={{
-          padding: 0,
-          spacing: 0,
-        }}
+        }))}
         styles={{
           container: { backgroundColor: "rgba(0, 0, 0, .9)" },
           captionContainer: {
-            background: "none",
-            bottom: 0,
-            width: "100%",
-            position: "absolute",
+            background:
+              "linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent)",
+            padding: "2rem",
           },
         }}
       />
