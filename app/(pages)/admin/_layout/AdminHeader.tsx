@@ -22,6 +22,7 @@ function AdminHeader() {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: faGauge, current: pathname === '/admin' },
     { name: 'Content', href: '/admin/manage', icon: faPhotoFilm, current: pathname === '/admin/manage' },
+    { name: 'Equipment', href: '/admin/equipment', icon: faPhotoFilm, current: pathname === '/admin/equipment' },
     { name: 'Settings', href: '/admin/settings', icon: faGear, current: pathname === '/admin/settings' },
   ];
 

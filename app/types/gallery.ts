@@ -7,12 +7,14 @@ export interface ImageMetadata {
   iso?: string;
   focalLength?: string;
   description?: string;
+  caption?: string;
+  title?: string;
 }
 
 export interface GalleryImage {
   url: string;
   aspectRatio: number;
-  displaySize?: 'small' | 'medium' | 'large';
+  displaySize?: "small" | "medium" | "large";
   gridSpan?: {
     rows: number;
   };
@@ -32,7 +34,7 @@ export interface GalleryImageWithMetadata extends GalleryImage {
 
 // Gallery metadata
 export interface GalleryNavigation {
-  category: 'travel' | 'stills' | 'aerial';
+  category: "travel" | "stills" | "aerial";
   primaryCategory?: string;
   secondaryCategory?: string;
   order?: number;
@@ -67,13 +69,13 @@ export type PrimaryCategoryOptions = {
 };
 
 export type PrimaryCategoryMap = {
-  stills: ['Landscape', 'Portrait', 'Street', 'Nature', 'Architecture'];
-  travel: ['Asia', 'Europe', 'Americas', 'Africa', 'Oceania'];
-  aerial: ['Drone', 'Aircraft'];
+  stills: ["Landscape", "Portrait", "Street", "Nature", "Architecture"];
+  travel: ["Asia", "Europe", "Americas", "Africa", "Oceania"];
+  aerial: ["Drone", "Aircraft"];
 };
 
 export interface NavigationInfoProps {
-  formData: Pick<GalleryDocument, 'navigation'>;
+  formData: Pick<GalleryDocument, "navigation">;
   setFormData: (data: (prev: GalleryDocument) => GalleryDocument) => void;
   baseInputStyles: string;
 }
