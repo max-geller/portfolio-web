@@ -12,6 +12,7 @@ import "yet-another-react-lightbox/plugins/thumbnails.css";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
 import Captions from "yet-another-react-lightbox/plugins/captions";
+import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 
 const categorizeImages = (images: GalleryImage[]): GalleryImage[] => {
   return images.map((image) => {
@@ -167,23 +168,15 @@ export default function StillsGalleryPage() {
         </div>
       </div>
 
-      {/* Image Grid */}
-      <div className="grid grid-cols-12 auto-rows-[350px] gap-3">
-        {images.map((image, index) => {
-          const colSpanClass = image.gridSpan?.cols === 12 
-            ? 'col-span-12' 
-            : image.gridSpan?.cols === 9 
-            ? 'col-span-9' 
-            : 'col-span-6';
-
-          const rowSpanClass = image.gridSpan?.rows === 2 
-            ? 'row-span-2' 
-            : 'row-span-1';
-
-          return (
+      {/* Replace your grid with ResponsiveMasonry */}
+      <ResponsiveMasonry
+        columnsCountBreakPoints={{ 350: 1, 750: 2, 1000: 3, 1400: 4 }}
+      >
+        <Masonry gutter="1rem">
+          {images.map((image, index) => (
             <div
               key={index}
-              className={`relative cursor-pointer group ${colSpanClass} ${rowSpanClass}`}
+              className="relative cursor-pointer group"
               onClick={() => {
                 setPhotoIndex(index);
                 setIsOpen(true);
@@ -192,11 +185,9 @@ export default function StillsGalleryPage() {
               <Image
                 src={image.url}
                 alt={image.title || `Gallery image ${index + 1}`}
-                fill
-                className="object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
-                sizes={`(max-width: 768px) 100vw, (max-width: 1200px) 50vw, ${
-                  (image.gridSpan?.cols || 4) * 8.33
-                }vw`}
+                width={image.metadata?.dimensions?.width || 1000}
+                height={image.metadata?.dimensions?.height || 1000}
+                className="rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg">
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -204,13 +195,11 @@ export default function StillsGalleryPage() {
                     <h3 className="text-lg font-semibold">{image.title}</h3>
                   )}
                   <div className="text-sm mt-2 space-y-1">
-                    {image.metadata?.camera?.make &&
-                      image.metadata?.camera?.model && (
-                        <div>
-                          {" "}
-                          {`${image.metadata.camera.make} ${image.metadata.camera.model}`.trim()}
-                        </div>
-                      )}
+                    {image.metadata?.camera?.make && image.metadata?.camera?.model && (
+                      <div>
+                        {`${image.metadata.camera.make} ${image.metadata.camera.model}`.trim()}
+                      </div>
+                    )}
                     {image.metadata?.settings?.shutterSpeed && (
                       <div>
                         {" "}
@@ -228,9 +217,9 @@ export default function StillsGalleryPage() {
                 </div>
               </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </Masonry>
+      </ResponsiveMasonry>
 
       {/* Lightbox */}
       <Lightbox
