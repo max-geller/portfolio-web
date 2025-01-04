@@ -16,27 +16,29 @@ import Captions from "yet-another-react-lightbox/plugins/captions";
 const categorizeImages = (images: GalleryImage[]): GalleryImage[] => {
   return images.map((image) => {
     const aspectRatio = image.metadata?.dimensions?.width / image.metadata?.dimensions?.height || 1;
+    console.log(`Image ${image.title || 'untitled'} - Aspect ratio: ${aspectRatio}`);
     
+    // Default to medium size
     let gridSpan = {
-      cols: 4,  // default size (1/3 width)
+      cols: 6,  // 1/4 width
       rows: 1
     };
 
-    // Wide/Panoramic images
-    if (aspectRatio > 1.8) {
-      gridSpan = { cols: 8, rows: 1 }; // 2/3 width
+    // Panoramic images (very wide, aspect ratio > 2:1)
+    if (aspectRatio > 2) {
+      gridSpan = { cols: 12, rows: 1 }; // half width
     } 
-    // Standard landscape images
-    else if (aspectRatio > 1.3) {
-      gridSpan = { cols: 6, rows: 1 }; // 1/2 width
+    // Wide landscape (between 1.7 and 2)
+    else if (aspectRatio >= 1.7) {
+      gridSpan = { cols: 9, rows: 1 }; // 3/8 width
     }
-    // Tall images (portrait orientation)
-    else if (aspectRatio < 0.75) {
-      gridSpan = { cols: 4, rows: 2 }; // 1/3 width but taller
+    // Standard landscape (between 1.3 and 1.7)
+    else if (aspectRatio >= 1.3) {
+      gridSpan = { cols: 6, rows: 1 }; // 1/4 width
     }
-    // Square-ish images
-    else {
-      gridSpan = { cols: 4, rows: 1 }; // 1/3 width
+    // Portrait images
+    else if (aspectRatio < 0.8) {
+      gridSpan = { cols: 6, rows: 2 }; // 1/4 width, double height
     }
 
     return { ...image, gridSpan };
@@ -166,13 +168,13 @@ export default function StillsGalleryPage() {
       </div>
 
       {/* Image Grid */}
-      <div className="grid grid-cols-12 auto-rows-[400px] gap-6">
+      <div className="grid grid-cols-12 auto-rows-[350px] gap-3">
         {images.map((image, index) => {
-          const colSpanClass = image.gridSpan?.cols === 8 
-            ? 'col-span-8' 
-            : image.gridSpan?.cols === 6 
-            ? 'col-span-6' 
-            : 'col-span-4';
+          const colSpanClass = image.gridSpan?.cols === 12 
+            ? 'col-span-12' 
+            : image.gridSpan?.cols === 9 
+            ? 'col-span-9' 
+            : 'col-span-6';
 
           const rowSpanClass = image.gridSpan?.rows === 2 
             ? 'row-span-2' 
