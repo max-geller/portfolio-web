@@ -31,7 +31,7 @@ const initialFormState: GalleryDocument = {
   description: "",
   location: "",
   date: new Date().toISOString(),
-  isPublished: false,
+  isPublished: true,
   navigation: {
     category: "stills",
     primaryCategory: "",
