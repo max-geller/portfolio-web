@@ -9,6 +9,10 @@ interface ImageMetadata {
   iso?: string;
   focalLength?: string;
   description?: string;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
 }
 
 interface GalleryImageWithMetadata extends GalleryImage {

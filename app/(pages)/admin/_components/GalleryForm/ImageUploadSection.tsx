@@ -117,40 +117,34 @@ export function ImageUploadSection({
     
     for (const file of files) {
       try {
-        // Get image dimensions
         const img = await createImageBitmap(file);
         const aspectRatio = img.width / img.height;
-        
-        // Extract EXIF data
         const exifData = await extractEquipmentFromExif(file);
-        
-        // Create preview URL
         const previewUrl = URL.createObjectURL(file);
-        
+
+        // Format the metadata to match ImageMetadata interface
+        const formattedMetadata = {
+          camera: exifData?.camera ? `${exifData.camera.make} ${exifData.camera.model}`.trim() : '',
+          lens: exifData?.lens ? `${exifData.lens.make} ${exifData.lens.model}`.trim() : '',
+          shutterSpeed: exifData?.settings?.shutterSpeed ? `1/${Math.round(1/exifData.settings.shutterSpeed)}` : '',
+          aperture: exifData?.settings?.aperture ? `f/${exifData.settings.aperture}` : '',
+          iso: exifData?.settings?.iso?.toString() || '',
+          focalLength: exifData?.settings?.focalLength ? `${Math.round(exifData.settings.focalLength)}mm` : '',
+          dimensions: exifData?.dimensions,
+        };
+
         const newImage: GalleryImageWithMetadata = {
           file,
           previewUrl,
           aspectRatio,
-          metadata: {
-            ...exifData,
-            filename: file.name,
-            filesize: file.size,
-            type: file.type,
-          },
+          metadata: formattedMetadata
         };
 
         setGalleryImages(prev => [...prev, newImage]);
 
-        // If this is the first image, set it as cover
         if (!coverImageId) {
           setCoverImageId(previewUrl);
         }
-
-        // Optional: Log found equipment
-        if (exifData?.camera || exifData?.lens) {
-          toast.success(`Found camera: ${exifData.camera?.model || 'Unknown'}, lens: ${exifData.lens?.model || 'Unknown'}`);
-        }
-
       } catch (error) {
         console.error('Error processing image:', error);
         toast.error(`Failed to process ${file.name}`);
