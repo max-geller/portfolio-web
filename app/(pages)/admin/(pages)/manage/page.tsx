@@ -89,8 +89,21 @@ export default function ManagePage() {
                       {gallery.isPublished ? 'Published' : 'Draft'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 hover:text-indigo-900">
-                    <Link href={`/admin/galleries/${gallery.slug}/edit`}>Edit</Link>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex space-x-4">
+                      <Link 
+                        href={`/gallery/${gallery.slug}`}
+                        className="text-gray-600 hover:text-gray-900"
+                      >
+                        View
+                      </Link>
+                      <Link 
+                        href={`/admin/galleries/${gallery.slug}/edit`}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        Edit
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
