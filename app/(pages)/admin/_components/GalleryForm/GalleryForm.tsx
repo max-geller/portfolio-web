@@ -10,12 +10,10 @@ import { GalleryDocument, GalleryImageWithMetadata } from "@/app/types/gallery";
 import { db, storage } from "@/app/firebase";
 import {
   collection,
-  query,
-  where,
-  getDocs,
   doc,
   setDoc,
   addDoc,
+  getDoc,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -101,7 +99,17 @@ export default function GalleryForm({
     setLoading(true);
 
     try {
-      // Upload images first
+      // Check if slug exists by trying to get the document directly
+      const galleryDoc = doc(db, "galleries", formData.slug);
+      const gallerySnapshot = await getDoc(galleryDoc);
+      
+      if (gallerySnapshot.exists() && !initialData?.id) {
+        setErrors({ slug: "This slug already exists" });
+        toast.error("Slug already exists");
+        return;
+      }
+
+      // Upload images
       const uploadPromises = galleryImages.map(uploadImage);
       const uploadedImages = await Promise.all(uploadPromises);
       const validImages = uploadedImages.filter((img): img is NonNullable<typeof img> => img !== null);
@@ -122,23 +130,8 @@ export default function GalleryForm({
         return;
       }
 
-      // Check if slug exists
-      const slugQuery = query(
-        collection(db, "galleries"),
-        where("slug", "==", formData.slug)
-      );
-      const slugSnapshot = await getDocs(slugQuery);
-      
-      if (!slugSnapshot.empty && !initialData?.id) {
-        setErrors({ slug: "This slug already exists" });
-        toast.error("Slug already exists");
-        return;
-      }
-
-      // Create gallery document
-      const galleryRef = initialData?.id 
-        ? doc(db, "galleries", initialData.id)
-        : doc(collection(db, "galleries"));
+      // Create/Update gallery document using slug as ID
+      const galleryRef = doc(db, "galleries", formData.slug);
 
       await setDoc(galleryRef, {
         ...formData,
@@ -148,7 +141,7 @@ export default function GalleryForm({
       });
 
       // Add images to subcollection
-      const imagesCollection = collection(db, "galleries", galleryRef.id, "images");
+      const imagesCollection = collection(db, "galleries", formData.slug, "images");
       
       for (const image of validImages) {
         await addDoc(imagesCollection, {

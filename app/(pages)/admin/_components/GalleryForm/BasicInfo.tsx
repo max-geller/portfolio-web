@@ -27,7 +27,7 @@ export function BasicInfo({
 }: BasicInfoProps) {
   // Generate array of years from 2020 to current year
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i);
+  const years = Array.from({ length: currentYear - 2005 }, (_, i) => currentYear - i);
 
   const generateSlug = (title: string, year: number) => {
     const baseSlug = title
