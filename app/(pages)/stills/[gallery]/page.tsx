@@ -118,6 +118,29 @@ export default function StillsGalleryPage() {
     }
   }, [params.gallery]);
 
+  useEffect(() => {
+    // Disable right-click
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    // Disable keyboard shortcuts and other download methods
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent Ctrl/Cmd + S, Ctrl/Cmd + Shift + S
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   if (error) return <div className="text-center p-8">{error}</div>;
   if (!gallery) return <div className="text-center p-8">Loading...</div>;
 
@@ -251,6 +274,16 @@ export default function StillsGalleryPage() {
               "linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent)",
 
           },
+          img: {
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            pointerEvents: 'none',
+          }
+        }}
+        render={{
+          buttonPrev: () => <span className="text-white text-4xl">←</span>,
+          buttonNext: () => <span className="text-white text-4xl">→</span>,
+          iconDownload: () => null, // This removes the download button
         }}
       />
     </main>
