@@ -10,6 +10,8 @@ import {
   faRightFromBracket,
   faChevronDown
 } from "@fortawesome/free-solid-svg-icons";
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+
 
 function AdminHeader() {
   const { logout } = useAuth();
@@ -20,10 +22,10 @@ function AdminHeader() {
   if (pathname === "/admin/login") return null;
 
   const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: faGauge, current: pathname === '/admin' },
-    { name: 'Content', href: '/admin/manage', icon: faPhotoFilm, current: pathname === '/admin/manage' },
-    { name: 'Equipment', href: '/admin/equipment', icon: faPhotoFilm, current: pathname === '/admin/equipment' },
-    { name: 'Settings', href: '/admin/settings', icon: faGear, current: pathname === '/admin/settings' },
+    { name: 'Dashboard', href: '/admin', icon: faGauge as IconProp, current: pathname === '/admin' },
+    { name: 'Content', href: '/admin/manage', icon: faPhotoFilm as IconProp, current: pathname === '/admin/manage' },
+    { name: 'Equipment', href: '/admin/equipment', icon: faPhotoFilm as IconProp, current: pathname === '/admin/equipment' },
+    { name: 'Settings', href: '/admin/settings', icon: faGear as IconProp, current: pathname === '/admin/settings' },
   ];
 
   return (
@@ -71,7 +73,7 @@ function AdminHeader() {
                 >
                   <span className="text-gray-700">Admin</span>
                   <FontAwesomeIcon 
-                    icon={faChevronDown} 
+                    icon={faChevronDown as IconProp} 
                     className="ml-2 h-4 w-4 text-gray-400" 
                   />
                 </button>
@@ -85,7 +87,7 @@ function AdminHeader() {
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <FontAwesomeIcon 
-                      icon={faRightFromBracket} 
+                      icon={faRightFromBracket as IconProp} 
                       className="mr-2 h-4 w-4 text-gray-400" 
                     />
                     Sign out
@@ -103,7 +105,7 @@ function AdminHeader() {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <span className="sr-only">Open main menu</span>
-              <FontAwesomeIcon icon={faChevronDown} className="h-6 w-6" />
+              <FontAwesomeIcon icon={faChevronDown as IconProp} className="h-6 w-6" />
             </button>
           </div>
         </div>
@@ -137,7 +139,7 @@ function AdminHeader() {
               }}
               className="block w-full py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:bg-gray-50 hover:border-l-4 hover:border-gray-300 hover:text-gray-700"
             >
-              <FontAwesomeIcon icon={faRightFromBracket} className="mr-2 h-4 w-4" />
+              <FontAwesomeIcon icon={faRightFromBracket as IconProp} className="mr-2 h-4 w-4" />
               Sign out
             </button>
           </div>

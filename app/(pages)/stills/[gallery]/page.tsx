@@ -16,7 +16,10 @@ import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 
 const categorizeImages = (images: GalleryImage[]): GalleryImage[] => {
   return images.map((image) => {
-    const aspectRatio = image.metadata?.dimensions?.width / image.metadata?.dimensions?.height || 1;
+    const width = image.metadata?.dimensions?.width ?? 1000;
+    const height = image.metadata?.dimensions?.height ?? 1000;
+    const aspectRatio = width / height;
+    
     console.log(`Image ${image.title || 'untitled'} - Aspect ratio: ${aspectRatio}`);
     
     // Default to medium size
@@ -202,16 +205,14 @@ export default function StillsGalleryPage() {
                     )}
                     {image.metadata?.settings?.shutterSpeed && (
                       <div>
-                        {" "}
-                        1/{Math.round(1 / image.metadata.settings.shutterSpeed)}
-                        s
+                        1/{Math.round(1 / image.metadata.settings.shutterSpeed)}s
                       </div>
                     )}
                     {image.metadata?.settings?.aperture && (
-                      <div> f/{image.metadata.settings.aperture}</div>
+                      <div>f/{image.metadata.settings.aperture}</div>
                     )}
                     {image.metadata?.settings?.iso && (
-                      <div> ISO {image.metadata.settings.iso}</div>
+                      <div>ISO {image.metadata.settings.iso}</div>
                     )}
                   </div>
                 </div>
@@ -250,38 +251,40 @@ export default function StillsGalleryPage() {
 
               <div className="flex-1 text-right space-x-4">
                 {img.metadata?.settings?.shutterSpeed && (
-                  <span>
-                    {" "}
-                    1/{Math.round(1 / img.metadata.settings.shutterSpeed)}s
-                  </span>
+                  <span>1/{Math.round(1 / img.metadata.settings.shutterSpeed)}s</span>
                 )}
                 {img.metadata?.settings?.aperture && (
-                  <span> f/{img.metadata.settings.aperture}</span>
+                  <span>f/{img.metadata.settings.aperture}</span>
                 )}
                 {img.metadata?.settings?.iso && (
-                  <span> ISO {img.metadata.settings.iso}</span>
+                  <span>ISO {img.metadata.settings.iso}</span>
                 )}
               </div>
             </div>
           ),
         }))}
         styles={{
-          container: { backgroundColor: "rgba(0, 0, 0, .9)" },
-          captionContainer: {
-            background:
-              "linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent)",
-
+          root: { backgroundColor: "rgba(0, 0, 0, .9)" },
+          container: { backgroundColor: "transparent" },
+          toolbar: {
+            background: "linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent)",
           },
-          img: {
+          slide: {
             userSelect: 'none',
             WebkitUserSelect: 'none',
             pointerEvents: 'none',
           }
         }}
+        carousel={{
+          padding: 0,
+          spacing: 0,
+        }}
         render={{
           buttonPrev: () => <span className="text-white text-4xl">←</span>,
           buttonNext: () => <span className="text-white text-4xl">→</span>,
-          iconDownload: () => null, // This removes the download button
+        }}
+        toolbar={{
+          buttons: ['close']
         }}
       />
     </main>
