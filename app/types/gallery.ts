@@ -73,10 +73,14 @@ interface ExifMetadata {
 }
 
 export interface GalleryImageWithMetadata {
+  id?: string;
   file?: File;
   previewUrl: string;
+  url?: string;
   aspectRatio: number;
   metadata?: ExifMetadata;
+  order?: number;
+  isNew?: boolean;
 }
 
 // Gallery metadata

@@ -1,14 +1,30 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { GalleryImageWithMetadata } from '@/app/types/gallery';
+import { GalleryImageWithMetadata, ExifMetadata } from '@/app/types/gallery';
 import { XMarkIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortableImage } from '../GalleryForm/SortableImage';
 
 interface EditImageSectionProps {
   galleryImages: GalleryImageWithMetadata[];
-  setGalleryImages: (images: GalleryImageWithMetadata[]) => void;
+  setGalleryImages: React.Dispatch<React.SetStateAction<GalleryImageWithMetadata[]>>;
   coverImageId: string;
   setCoverImageId: (id: string) => void;
-  setDeletedImages: (ids: string[]) => void;
+  setDeletedImages: React.Dispatch<React.SetStateAction<string[]>>;
   gallerySlug: string;
 }
 
@@ -22,6 +38,31 @@ export function EditImageSection({
 }: EditImageSectionProps) {
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = galleryImages.findIndex(
+        (image) => image.id === active.id
+      );
+      const newIndex = galleryImages.findIndex(
+        (image) => image.id === over.id
+      );
+      
+      const reorderedImages = arrayMove(galleryImages, oldIndex, newIndex)
+        .map((img, index) => ({ ...img, order: index }));
+      
+      setGalleryImages(reorderedImages);
+    }
+  };
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newImages = acceptedFiles.map(file => {
       return new Promise<GalleryImageWithMetadata>((resolve) => {
@@ -29,18 +70,25 @@ export function EditImageSection({
         reader.onload = () => {
           const img = new Image();
           img.onload = () => {
-            resolve({
+            const newImage: GalleryImageWithMetadata = {
               id: `temp-${Date.now()}-${file.name}`,
               file,
               url: reader.result as string,
+              previewUrl: reader.result as string,
               aspectRatio: img.width / img.height,
               isNew: true,
+              order: galleryImages.length,
               metadata: {
-                name: file.name,
-                size: file.size,
+                filename: file.name,
+                filesize: file.size,
                 type: file.type,
+                dimensions: {
+                  width: img.width,
+                  height: img.height
+                }
               }
-            });
+            };
+            resolve(newImage);
           };
           img.src = reader.result as string;
         };
@@ -50,11 +98,11 @@ export function EditImageSection({
 
     Promise.all(newImages).then(processedImages => {
       setGalleryImages(prev => [...prev, ...processedImages]);
-      if (!coverImageId && processedImages.length > 0) {
+      if (!coverImageId && processedImages.length > 0 && processedImages[0].id) {
         setCoverImageId(processedImages[0].id);
       }
     });
-  }, [coverImageId, setCoverImageId, setGalleryImages]);
+  }, [coverImageId, setCoverImageId, setGalleryImages, galleryImages.length]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -95,58 +143,30 @@ export function EditImageSection({
         </p>
       </div>
 
-      {/* Image Grid */}
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {galleryImages.map((image) => (
-          <div
-            key={image.id}
-            className={`
-              relative group aspect-square overflow-hidden rounded-lg
-              ${coverImageId === image.id ? 'ring-2 ring-indigo-500' : ''}
-            `}
-          >
-            <img
-              src={image.url}
-              alt={image.metadata?.name || 'Gallery image'}
-              className="object-cover w-full h-full"
-            />
-            
-            {/* Image Controls Overlay */}
-            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleSetCover(image.id)}
-                className={`
-                  px-3 py-1 rounded-full text-xs
-                  ${coverImageId === image.id
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-gray-900 hover:bg-indigo-500 hover:text-white'
-                  }
-                `}
-              >
-                {coverImageId === image.id ? 'Cover Image' : 'Set as Cover'}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(image.id)}
-                className="p-1 rounded-full bg-red-500 text-white hover:bg-red-600"
-              >
-                <XMarkIcon className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Upload Progress */}
-            {uploadProgress[image.id] !== undefined && uploadProgress[image.id] < 100 && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
-                <div
-                  className="h-full bg-indigo-500"
-                  style={{ width: `${uploadProgress[image.id]}%` }}
-                />
-              </div>
-            )}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={galleryImages.map(img => img.id || '')}
+          strategy={rectSortingStrategy}
+        >
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {galleryImages.map((image, index) => (
+              <SortableImage
+                key={image.id}
+                image={image}
+                index={index}
+                isCover={image.id === coverImageId}
+                onSetCover={() => setCoverImageId(image.id || '')}
+                onDelete={() => handleRemoveImage(image.id || '')}
+                viewMode="grid"
+              />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }

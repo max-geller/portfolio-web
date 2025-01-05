@@ -4,11 +4,11 @@ import { useParams } from "next/navigation";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "@/app/firebase";
 import { GalleryDocument, GalleryImageWithMetadata } from "@/app/types/gallery";
-import EditGalleryForm from "@/app/(pages)/admin/_components/EditGalleryForm/EditGalleryForm";
+import { EditGalleryForm } from "@/app/(pages)/admin/_components/EditGalleryForm/EditGalleryForm";
 import { toast } from "react-hot-toast";
 
 interface EditGalleryData extends GalleryDocument {
-  images?: GalleryImageWithMetadata[];
+  images: GalleryImageWithMetadata[];
   coverImageId?: string;
 }
 
@@ -27,7 +27,6 @@ export default function EditGalleryPage() {
           return;
         }
 
-        // Fetch gallery images
         const imagesSnapshot = await getDocs(
           collection(db, "galleries", galleryDoc.id, "images")
         );
@@ -37,16 +36,27 @@ export default function EditGalleryPage() {
           return {
             id: doc.id,
             url: data.url,
-            previewUrl: data.previewUrl,
+            previewUrl: data.previewUrl || data.url,
             aspectRatio: data.aspectRatio,
             metadata: {
-              camera: data.metadata?.camera,
-              lens: data.metadata?.lens,
-              settings: data.metadata?.settings,
+              camera: {
+                make: data.metadata?.camera?.make || '',
+                model: data.metadata?.camera?.model || '',
+              },
+              lens: {
+                make: data.metadata?.lens?.make || '',
+                model: data.metadata?.lens?.model || '',
+              },
+              settings: {
+                focalLength: data.metadata?.settings?.focalLength || 0,
+                aperture: data.metadata?.settings?.aperture || 0,
+                shutterSpeed: data.metadata?.settings?.shutterSpeed || 0,
+                iso: data.metadata?.settings?.iso || 0,
+              },
               dimensions: data.metadata?.dimensions,
               datetime: data.metadata?.datetime,
-              filename: data.metadata?.filename || data.metadata?.name || '',
-              filesize: data.metadata?.filesize || data.metadata?.size || 0,
+              filename: data.metadata?.filename || '',
+              filesize: data.metadata?.filesize || 0,
               type: data.metadata?.type || '',
             },
             order: data.order || 0,
@@ -72,7 +82,7 @@ export default function EditGalleryPage() {
             lenses: data.gear?.lenses || [],
             accessories: data.gear?.accessories || [],
           },
-          images,
+          images: images.sort((a, b) => (a.order || 0) - (b.order || 0)),
           coverImageId: data.coverImageId
         };
 
