@@ -5,6 +5,7 @@ import { TrafficData, TimeFrame } from '../../lib/types/analytics';
 import { getTrafficData } from '../../lib/services/analyticsService';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartLine, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 export default function TrafficOverview() {
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('90');
@@ -35,7 +36,7 @@ export default function TrafficOverview() {
     <div className="widget md:col-span-3">
       <div className="widget-header">
         <div className="flex items-center gap-2">
-          <FontAwesomeIcon icon={faChartLine} className="text-gray-500" />
+          <FontAwesomeIcon icon={faChartLine as IconProp} className="text-gray-500" />
           <h2 className="widget-title">Visitor Traffic</h2>
         </div>
         <div className="flex items-center gap-4">
@@ -57,7 +58,7 @@ export default function TrafficOverview() {
       <div className="widget-content h-64">
         {loading ? (
           <div className="h-full flex items-center justify-center">
-            <FontAwesomeIcon icon={faSpinner} spin className="text-gray-400 text-2xl" />
+            <FontAwesomeIcon icon={faSpinner as IconProp} spin className="text-gray-400 text-2xl" />
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
