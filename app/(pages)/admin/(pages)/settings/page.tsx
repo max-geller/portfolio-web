@@ -234,7 +234,7 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-bold mb-6">Category Management</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {["stills", "travel", "aerial"].map((parentCat) => (
+        {(["stills", "travel", "aerial"] as const).map((parentCat) => (
           <div key={parentCat} className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold capitalize">{parentCat}</h2>
