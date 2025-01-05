@@ -149,24 +149,24 @@ export default function GalleryForm({
           url: image.url,
           aspectRatio: image.aspectRatio,
           isCover: image.url === coverImage.url,
-          metadata: {
-            camera: image.metadata?.camera ? {
+          metadata: image.metadata ? {
+            camera: image.metadata.camera ? {
               make: image.metadata.camera.make,
               model: image.metadata.camera.model
             } : null,
-            lens: image.metadata?.lens ? {
+            lens: image.metadata.lens ? {
               make: image.metadata.lens.make,
               model: image.metadata.lens.model
             } : null,
-            settings: image.metadata?.settings ? {
+            settings: image.metadata.settings ? {
               aperture: image.metadata.settings.aperture,
               shutterSpeed: image.metadata.settings.shutterSpeed,
               iso: image.metadata.settings.iso,
               focalLength: image.metadata.settings.focalLength
             } : null,
-            dimensions: image.metadata?.dimensions || null,
-            datetime: image.metadata?.datetime || null
-          }
+            dimensions: image.metadata.dimensions || null,
+            datetime: image.metadata.datetime || null
+          } : null
         };
 
         await addDoc(imagesCollection, imageMetadata);

@@ -100,6 +100,9 @@ export interface GalleryDocument {
   location: string;
   date: string;
   isPublished: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  photoUrl?: string;
   navigation: {
     category: NavigationCategory;
     primaryCategory: string;
