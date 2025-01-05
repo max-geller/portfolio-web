@@ -15,6 +15,7 @@ import {
   getDocs,
   deleteDoc,
   addDoc,
+  getDoc,
 } from "firebase/firestore";
 import {
   ref,
@@ -62,15 +63,26 @@ export function EditGalleryForm({ galleryId, initialData }: EditGalleryFormProps
 
       // Handle deleted images
       for (const imageId of deletedImages) {
-        // Delete from storage
-        const imageRef = ref(storage, `galleries/${formData.slug}/${imageId}`);
         try {
-          await deleteObject(imageRef);
+          // Get the image URL from Firestore first
+          const imageDoc = await getDoc(doc(db, "galleries", galleryId, "images", imageId));
+          if (imageDoc.exists()) {
+            const imageData = imageDoc.data();
+            // Extract the full path from the URL
+            const storageUrl = new URL(imageData.url);
+            const storagePath = decodeURIComponent(storageUrl.pathname.split('/o/')[1].split('?')[0]);
+            
+            // Delete from storage using the full path
+            const imageRef = ref(storage, storagePath);
+            await deleteObject(imageRef);
+            
+            // Delete from Firestore
+            await deleteDoc(doc(db, "galleries", galleryId, "images", imageId));
+          }
         } catch (error) {
-          console.error("Error deleting image from storage:", error);
+          console.error("Error deleting image:", error);
+          toast.error(`Failed to delete image ${imageId}`);
         }
-        // Delete from Firestore
-        await deleteDoc(doc(db, "galleries", galleryId, "images", imageId));
       }
 
       // Handle new images
