@@ -18,6 +18,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableImage } from '../GalleryForm/SortableImage';
+import { extractEquipmentFromExif } from '../GalleryForm/ImageUploadSection';
 
 interface EditImageSectionProps {
   galleryImages: GalleryImageWithMetadata[];
@@ -63,10 +64,12 @@ export function EditImageSection({
     }
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newImages = acceptedFiles.map(file => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const newImages = await Promise.all(acceptedFiles.map(async file => {
+      const reader = new FileReader();
+      const exifData = await extractEquipmentFromExif(file);
+      
       return new Promise<GalleryImageWithMetadata>((resolve) => {
-        const reader = new FileReader();
         reader.onload = () => {
           const img = new Image();
           img.onload = () => {
@@ -79,6 +82,7 @@ export function EditImageSection({
               isNew: true,
               order: galleryImages.length,
               metadata: {
+                ...exifData,
                 filename: file.name,
                 filesize: file.size,
                 type: file.type,
@@ -94,14 +98,12 @@ export function EditImageSection({
         };
         reader.readAsDataURL(file);
       });
-    });
+    }));
 
-    Promise.all(newImages).then(processedImages => {
-      setGalleryImages(prev => [...prev, ...processedImages]);
-      if (!coverImageId && processedImages.length > 0 && processedImages[0].id) {
-        setCoverImageId(processedImages[0].id);
-      }
-    });
+    setGalleryImages(prev => [...prev, ...newImages]);
+    if (!coverImageId && newImages.length > 0 && newImages[0].id) {
+      setCoverImageId(newImages[0].id);
+    }
   }, [coverImageId, setCoverImageId, setGalleryImages, galleryImages.length]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

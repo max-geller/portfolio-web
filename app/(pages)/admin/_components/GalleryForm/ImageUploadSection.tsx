@@ -31,7 +31,7 @@ interface ImageUploadSectionProps {
   setCoverImageId: (id: string | null) => void;
 }
 
-const extractEquipmentFromExif = async (file: File) => {
+export const extractEquipmentFromExif = async (file: File) => {
   try {
     const exif = await exifr.parse(file, true);
     if (!exif) return null;

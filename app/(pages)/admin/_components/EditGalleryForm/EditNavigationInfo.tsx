@@ -66,6 +66,11 @@ export function EditNavigationInfo({
     }
   }, [categories, formData.navigation.primaryCategory]);
 
+  useEffect(() => {
+    // Debug log to verify data
+    console.log('Navigation Data:', formData.navigation);
+  }, [formData.navigation]);
+
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Navigation</h2>
