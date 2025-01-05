@@ -34,11 +34,12 @@ const baseInputStyles =
 
 export function EditGalleryForm({ galleryId, initialData }: EditGalleryFormProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState<GalleryDocument>(initialData);
+  const [formData, setFormData] = useState<GalleryDocument & { images?: GalleryImageWithMetadata[] }>(initialData);
   const [galleryImages, setGalleryImages] = useState<GalleryImageWithMetadata[]>(initialData.images || []);
   const [coverImageId, setCoverImageId] = useState<string>(initialData.coverImageId || '');
   const [deletedImages, setDeletedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // This useEffect ensures the form data stays in sync with initialData
   useEffect(() => {
@@ -142,6 +143,8 @@ export function EditGalleryForm({ galleryId, initialData }: EditGalleryFormProps
         formData={formData}
         setFormData={setFormData}
         baseInputStyles={baseInputStyles}
+        errors={errors}
+        loading={isSubmitting}
       />
       
       <EditNavigationInfo

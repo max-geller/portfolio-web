@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { GalleryImageWithMetadata, ExifMetadata } from '@/app/types/gallery';
+import { GalleryImageWithMetadata } from '@/app/types/gallery';
 import { XMarkIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import {
   DndContext,
@@ -118,13 +118,24 @@ export function EditImageSection({
     setGalleryImages(prev => prev.filter(img => img.id !== imageId));
     if (coverImageId === imageId) {
       const remainingImages = galleryImages.filter(img => img.id !== imageId);
-      setCoverImageId(remainingImages.length > 0 ? remainingImages[0].id : '');
+      const firstImageId = remainingImages.length > 0 && remainingImages[0].id ? remainingImages[0].id : '';
+      setCoverImageId(firstImageId);
     }
     setDeletedImages(prev => [...prev, imageId]);
   };
 
   const handleSetCover = (imageId: string) => {
     setCoverImageId(imageId);
+  };
+
+  const handleMetadataUpdate = (index: number, metadata: any) => {
+    setGalleryImages(prev => {
+      const newImages = [...prev];
+      if (newImages[index]) {
+        newImages[index] = { ...newImages[index], metadata };
+      }
+      return newImages;
+    });
   };
 
   return (
@@ -165,6 +176,7 @@ export function EditImageSection({
                 onSetCover={() => setCoverImageId(image.id || '')}
                 onDelete={() => handleRemoveImage(image.id || '')}
                 viewMode="grid"
+                onMetadataUpdate={(metadata) => handleMetadataUpdate(index, metadata)}
               />
             ))}
           </div>
