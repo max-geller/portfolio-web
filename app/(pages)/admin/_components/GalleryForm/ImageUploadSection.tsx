@@ -20,7 +20,7 @@ import { ListIcon, GridIcon, UploadIcon } from '@/app/_components/icons';
 import { GalleryPreview } from '../GalleryPreview';
 import { optimizeImage } from '@/app/utils/imageOptimization';
 import { SortableImage } from './SortableImage';
-import { GalleryImageWithMetadata } from '@/app/types/gallery';
+import { GalleryImageWithMetadata, ExifMetadata } from '@/app/types/gallery';
 import exifr from 'exifr';
 import { toast } from 'react-hot-toast';
 
@@ -128,18 +128,32 @@ export function ImageUploadSection({
           previewUrl,
           aspectRatio,
           metadata: {
-            camera: exifData?.camera || null,
-            lens: exifData?.lens || null,
-            settings: exifData?.settings || null,
-            dimensions: exifData?.dimensions || null,
-            datetime: exifData?.datetime || null,
+            camera: exifData?.camera || {
+              make: '',
+              model: ''
+            },
+            lens: exifData?.lens || {
+              make: '',
+              model: ''
+            },
+            settings: exifData?.settings || {
+              focalLength: 0,
+              aperture: 0,
+              shutterSpeed: 0,
+              iso: 0
+            },
+            dimensions: exifData?.dimensions || {
+              width: img.width,
+              height: img.height
+            },
+            datetime: exifData?.datetime,
             filename: file.name,
             filesize: file.size,
             type: file.type
           }
         };
 
-        setGalleryImages(prev => [...prev, newImage]);
+        setGalleryImages([...galleryImages, newImage]);
 
         if (!coverImageId) {
           setCoverImageId(previewUrl);
@@ -153,8 +167,19 @@ export function ImageUploadSection({
 
   const handleImageDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    await handleFileChange({ target: { files } });
+    const files = e.dataTransfer.files;
+    await handleFileChange({ target: { files } } as React.ChangeEvent<HTMLInputElement>);
+  };
+
+  const handleMetadataUpdate = (index: number, metadata: ExifMetadata) => {
+    const newImages = [...galleryImages];
+    if (newImages[index]) {
+      newImages[index] = {
+        ...newImages[index],
+        metadata
+      };
+    }
+    setGalleryImages(newImages);
   };
 
   return (
@@ -227,9 +252,7 @@ export function ImageUploadSection({
                       }
                     }}
                     onMetadataUpdate={(metadata) => {
-                      const newImages = [...galleryImages];
-                      newImages[index].metadata = metadata;
-                      setGalleryImages(newImages);
+                      handleMetadataUpdate(index, metadata);
                     }}
                   />
                 </motion.div>
