@@ -83,14 +83,28 @@ export function EditImageSection({
               isNew: true,
               order: galleryImages.length,
               metadata: {
-                ...exifData,
-                filename: file.name,
-                filesize: file.size,
-                type: file.type,
+                camera: exifData?.camera || {
+                  make: '',
+                  model: ''
+                },
+                lens: exifData?.lens || {
+                  make: '',
+                  model: ''
+                },
+                settings: exifData?.settings || {
+                  focalLength: 0,
+                  aperture: 0,
+                  shutterSpeed: 0,
+                  iso: 0
+                },
                 dimensions: {
                   width: img.width,
                   height: img.height
-                }
+                },
+                filename: file.name,
+                filesize: file.size,
+                type: file.type,
+                datetime: exifData?.datetime
               }
             };
             resolve(newImage);
