@@ -174,9 +174,27 @@ export function ImageUploadSection({
   const handleMetadataUpdate = (index: number, metadata: ExifMetadata) => {
     const newImages = [...galleryImages];
     if (newImages[index]) {
+      const currentMetadata = newImages[index].metadata;
       newImages[index] = {
         ...newImages[index],
-        metadata
+        metadata: {
+          camera: metadata.camera || { make: '', model: '' },
+          lens: metadata.lens || { make: '', model: '' },
+          settings: metadata.settings || {
+            focalLength: 0,
+            aperture: 0,
+            shutterSpeed: 0,
+            iso: 0
+          },
+          dimensions: metadata.dimensions || {
+            width: 0,
+            height: 0
+          },
+          filename: metadata.filename || currentMetadata?.filename || '',
+          filesize: metadata.filesize || currentMetadata?.filesize || 0,
+          type: metadata.type || currentMetadata?.type || '',
+          datetime: metadata.datetime || currentMetadata?.datetime
+        }
       };
     }
     setGalleryImages(newImages);

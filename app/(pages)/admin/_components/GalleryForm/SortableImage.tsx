@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { StarIcon, TrashIcon } from '@/app/_components/icons';
 import { ImageMetadataForm } from './ImageMetadataForm';
-import { GalleryImageWithMetadata, ImageMetadata } from '@/app/types/gallery';
+import { GalleryImageWithMetadata, ExifMetadata } from '@/app/types/gallery';
 
 interface SortableImageProps {
   image: GalleryImageWithMetadata;
@@ -12,7 +12,7 @@ interface SortableImageProps {
   isCover: boolean;
   onSetCover: () => void;
   onDelete: () => void;
-  onMetadataUpdate: (metadata: ImageMetadata) => void;
+  onMetadataUpdate: (metadata: ExifMetadata) => void;
 }
 
 export function SortableImage({

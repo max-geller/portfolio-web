@@ -70,6 +70,7 @@ export interface ExifMetadata {
   filename: string;
   filesize: number;
   type: string;
+  description?: string;
 }
 
 export interface GalleryImageWithMetadata {
