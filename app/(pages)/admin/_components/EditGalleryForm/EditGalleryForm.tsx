@@ -51,10 +51,11 @@ export function EditGalleryForm({ galleryId, initialData }: EditGalleryFormProps
     setIsSubmitting(true);
 
     try {
-      // Update gallery document
+      // Update gallery document (excluding images array)
+      const { images, ...galleryData } = formData;
       const galleryRef = doc(db, "galleries", galleryId);
       await updateDoc(galleryRef, {
-        ...formData,
+        ...galleryData,
         coverImageId,
         updatedAt: new Date().toISOString()
       });
@@ -76,16 +77,39 @@ export function EditGalleryForm({ galleryId, initialData }: EditGalleryFormProps
       const newImages = galleryImages.filter(img => img.isNew);
       for (const image of newImages) {
         if (image.file) {
+          // Upload to storage
           const storageRef = ref(storage, `galleries/${formData.slug}/${image.id}`);
           await uploadBytes(storageRef, image.file);
           const url = await getDownloadURL(storageRef);
 
+          // Add to images subcollection
           await addDoc(collection(db, "galleries", galleryId, "images"), {
             url,
             previewUrl: url,
             aspectRatio: image.aspectRatio,
-            metadata: image.metadata,
-            order: image.order
+            order: image.order,
+            metadata: {
+              camera: image.metadata?.camera || null,
+              lens: image.metadata?.lens || null,
+              settings: image.metadata?.settings || null,
+              dimensions: image.metadata?.dimensions || null,
+              filename: image.metadata?.filename || null,
+              filesize: image.metadata?.filesize || null,
+              type: image.metadata?.type || null,
+              datetime: image.metadata?.datetime || null
+            }
+          });
+        }
+      }
+
+      // Update existing images (order and metadata)
+      const existingImages = galleryImages.filter(img => !img.isNew);
+      for (const image of existingImages) {
+        if (image.id) {
+          const imageRef = doc(db, "galleries", galleryId, "images", image.id);
+          await updateDoc(imageRef, {
+            order: image.order,
+            metadata: image.metadata
           });
         }
       }

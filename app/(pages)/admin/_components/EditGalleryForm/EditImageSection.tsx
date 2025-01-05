@@ -37,7 +37,8 @@ export function EditImageSection({
   setDeletedImages,
   gallerySlug
 }: EditImageSectionProps) {
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [draggedImage, setDraggedImage] = useState<GalleryImageWithMetadata | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
