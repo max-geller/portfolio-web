@@ -47,22 +47,22 @@ export interface GalleryImage {
   };
 }
 
-interface ExifMetadata {
-  camera?: {
+export interface ExifMetadata {
+  camera: {
     make: string;
     model: string;
   };
-  lens?: {
+  lens: {
     make: string;
     model: string;
   };
-  settings?: {
+  settings: {
     focalLength: number;
     aperture: number;
     shutterSpeed: number;
     iso: number;
   };
-  dimensions?: {
+  dimensions: {
     width: number;
     height: number;
   };

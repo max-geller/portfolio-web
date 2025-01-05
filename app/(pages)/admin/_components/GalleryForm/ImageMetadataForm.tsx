@@ -1,33 +1,22 @@
 import { motion } from 'framer-motion';
-import { GalleryImage } from '@/app/types/gallery';
-
-interface ImageMetadata {
-  camera?: string;
-  lens?: string;
-  shutterSpeed?: string;
-  aperture?: string;
-  iso?: string;
-  focalLength?: string;
-  description?: string;
-  dimensions?: {
-    width: number;
-    height: number;
-  };
-}
-
-interface GalleryImageWithMetadata extends GalleryImage {
-  metadata?: ImageMetadata;
-  file?: File;
-  previewUrl?: string;
-}
+import { GalleryImageWithMetadata, ExifMetadata } from '@/app/types/gallery';
 
 interface ImageMetadataFormProps {
   image: GalleryImageWithMetadata;
   index: number;
-  onUpdate: (metadata: ImageMetadata) => void;
+  onUpdate: (metadata: ExifMetadata) => void;
 }
 
 export function ImageMetadataForm({ image, index, onUpdate }: ImageMetadataFormProps) {
+  const handleUpdate = (updates: Partial<ExifMetadata>) => {
+    if (!image.metadata) return;
+    
+    onUpdate({
+      ...image.metadata,
+      ...updates,
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
