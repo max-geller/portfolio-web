@@ -1,4 +1,6 @@
 "use client";
+import ClientLayout from '@/app/_layout/ClientLayout';
+
 import axios from "axios";
 import { useEffect, useState } from "react";
 
@@ -21,12 +23,13 @@ export default function NotFound() {
     fetchRandomGif();
   }, []);
   return (
-    <>
+
+    <ClientLayout>
       <div className="flex flex-col items-center justify-center p-48">
         <h1 className="text-4xl font-bold">404 - Page Not Found</h1>
         <p className="text-2xl">Sorry, that page does not exist.</p>
         {randomGif && <img src={randomGif} alt="Random Giphy GIF" height={20} width={20} />}
       </div>
-    </>
+    </ClientLayout>
   );
 }

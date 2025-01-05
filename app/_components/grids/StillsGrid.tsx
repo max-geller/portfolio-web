@@ -10,51 +10,71 @@ interface StillsGridProps {
   category: string;
 }
 
+function LoadingGrid() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-0">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="aspect-square bg-gray-200 animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
 export default function StillsGrid({ category }: StillsGridProps) {
+  const [loading, setLoading] = useState(true);
   const [stillItems, setStillItems] = useState<GalleryDocument[]>([]);
 
   useEffect(() => {
     const fetchStillItems = async () => {
-      const q = query(
-        collection(db, "galleries"),
-        and(
-          where("navigation.category", "==", "stills"),
-          where("navigation.primaryCategory", "==", category),
-          where("isPublished", "==", true)
-        ),
-        orderBy("date", "desc")
-      );
+      setLoading(true);
+      try {
+        const q = query(
+          collection(db, "galleries"),
+          and(
+            where("navigation.category", "==", "stills"),
+            where("navigation.primaryCategory", "==", category),
+            where("isPublished", "==", true)
+          ),
+          orderBy("date", "desc")
+        );
 
-      const querySnapshot = await getDocs(q);
-      const items = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          title: data.title || '',
-          slug: data.slug || '',
-          description: data.description || '',
-          location: data.location || '',
-          date: data.date?.toDate().toISOString() || '',
-          photoUrl: data.photoUrl || '',
-          navigation: {
-            category: data.navigation?.category || 'stills' as NavigationCategory,
-            primaryCategory: data.navigation?.primaryCategory || '',
-            secondaryCategory: data.navigation?.secondaryCategory || ''
-          },
-          isPublished: data.isPublished || false,
-          gear: {
-            cameras: data.gear?.cameras || [],
-            lenses: data.gear?.lenses || [],
-            accessories: data.gear?.accessories || []
-          }
-        } as GalleryDocument;
-      });
+        const querySnapshot = await getDocs(q);
+        const items = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title || '',
+            slug: data.slug || '',
+            description: data.description || '',
+            location: data.location || '',
+            date: data.date?.toDate().toISOString() || '',
+            photoUrl: data.photoUrl || '',
+            navigation: {
+              category: data.navigation?.category || 'stills' as NavigationCategory,
+              primaryCategory: data.navigation?.primaryCategory || '',
+              secondaryCategory: data.navigation?.secondaryCategory || ''
+            },
+            isPublished: data.isPublished || false,
+            gear: {
+              cameras: data.gear?.cameras || [],
+              lenses: data.gear?.lenses || [],
+              accessories: data.gear?.accessories || []
+            }
+          } as GalleryDocument;
+        });
 
-      setStillItems(items);
+        setStillItems(items);
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchStillItems();
   }, [category]);
+
+  if (loading) return <LoadingGrid />;
 
   return (
     <div className="w-full">

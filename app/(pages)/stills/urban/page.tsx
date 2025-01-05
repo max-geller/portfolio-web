@@ -1,6 +1,11 @@
 "use client";
 import StillsGrid from "@/app/_components/grids/StillsGrid";
+import ClientLayout from "@/app/_layout/ClientLayout";
 
 export default function UrbanPage() {
-    return <StillsGrid category="Urban" />;
-  }
+  return (
+    <ClientLayout>
+      <StillsGrid category="Urban" />
+    </ClientLayout>
+  );
+}

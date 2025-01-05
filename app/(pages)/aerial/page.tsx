@@ -1,10 +1,11 @@
 "use client";
-import FpvGrid from "../../_components/grids/FpvGrid";
+import ClientLayout from "@/app/_layout/ClientLayout";
 
-export default function FPVHome() {
+export default function AerialHome() {
   return (
-    <main className="flex flex-col">
-      <FpvGrid />
-    </main>
+    <ClientLayout>
+      <main className="flex flex-col">
+      </main>
+    </ClientLayout>
   );
 }

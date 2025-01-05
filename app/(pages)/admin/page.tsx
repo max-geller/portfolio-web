@@ -2,12 +2,14 @@
 import React from "react";
 import "./styles/dashboard.css";
 import TrafficOverview from "./_components/_widgets/TrafficOverview";
+import ClientLayout from "@/app/_layout/ClientLayout";
 
 export default function AdminDashboard() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <ClientLayout>
+      <div className="min-h-screen bg-gray-100">
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
 
           <TrafficOverview />
 
@@ -168,5 +170,6 @@ export default function AdminDashboard() {
         <li>User Acquisition Metrics</li>
       </ul>
     </div>
+    </ClientLayout>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { useState, useEffect } from 'react';
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import ClientLayout from "@/app/_layout/ClientLayout";
 
 interface CategoryOption {
   title: string;
@@ -42,44 +43,46 @@ export default function StillsHome() {
   }, []);
 
   return (
-    <main className={`min-h-screen ${isMobile ? 'flex flex-col' : 'flex flex-row'}`}>
-      {categories.map((category, index) => (
-        <Link
-          href={`/stills/${category.slug}`}
-          key={category.slug}
-          className={`relative overflow-hidden group ${
-            isMobile ? 'h-[33vh] w-full' : 'w-1/3 h-screen min-w-[240px]'
-          }`}
-        >
-          <motion.div
-            initial={{ scale: 1.1 }}
-            whileHover={{ scale: 1.15 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative w-full h-full"
+    <ClientLayout>
+      <main className={`min-h-screen ${isMobile ? 'flex flex-col' : 'flex flex-row'}`}>
+        {categories.map((category, index) => (
+          <Link
+            href={`/stills/${category.slug}`}
+            key={category.slug}
+            className={`relative overflow-hidden group ${
+              isMobile ? 'h-[33vh] w-full' : 'w-1/3 h-screen min-w-[240px]'
+            }`}
           >
-            <Image
-              src={category.image}
-              alt={category.title}
-              fill
-              className="object-cover"
-              priority={index === 0}
-              sizes={isMobile ? "100vw" : "33vw"}
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-30 transition-opacity duration-300 group-hover:bg-opacity-20" />
-
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: index * 0.2, duration: 0.5 }}
-              className="absolute inset-0 flex items-center justify-center"
+              initial={{ scale: 1.1 }}
+              whileHover={{ scale: 1.15 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="relative w-full h-full"
             >
-              <h2 className="text-white text-4xl font-bold tracking-wider">
-                {category.title}
-              </h2>
+              <Image
+                src={category.image}
+                alt={category.title}
+                fill
+                className="object-cover"
+                priority={index === 0}
+                sizes={isMobile ? "100vw" : "33vw"}
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-30 transition-opacity duration-300 group-hover:bg-opacity-20" />
+
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: index * 0.2, duration: 0.5 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <h2 className="text-white text-4xl font-bold tracking-wider">
+                  {category.title}
+                </h2>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        </Link>
-      ))}
-    </main>
+          </Link>
+        ))}
+      </main>
+    </ClientLayout>
   );
 }

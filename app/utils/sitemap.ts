@@ -1,34 +1,36 @@
+import { MetadataRoute } from 'next';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/app/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
 
-interface Gallery {
-  slug: string;
-  updatedAt: string;
-}
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Base URL
+  const baseUrl = 'https://yourdomain.com';
 
-async function getGalleries(): Promise<Gallery[]> {
-  const galleryRef = collection(db, 'galleries');
-  const q = query(galleryRef, where('isPublished', '==', true));
-  const snapshot = await getDocs(q);
-  
-  return snapshot.docs.map(doc => ({
-    slug: doc.id,
-    updatedAt: doc.data().updatedAt || new Date().toISOString()
+  // Get all galleries
+  const galleriesSnapshot = await getDocs(collection(db, 'galleries'));
+  const galleryUrls = galleriesSnapshot.docs
+    .filter(doc => doc.data().isPublished)
+    .map(doc => ({
+      url: `${baseUrl}/stills/${doc.data().slug}`,
+      lastModified: new Date(doc.data().updatedAt || doc.data().createdAt || Date.now()),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+
+  // Static routes
+  const routes = [
+    '',
+    '/stills',
+    '/travel',
+    '/aerial',
+    '/about',
+    '/contact',
+  ].map(route => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 1.0,
   }));
-}
 
-export async function generateSitemap() {
-  const galleries = await getGalleries();
-  
-  return `<?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-      ${galleries.map((gallery: Gallery) => `
-        <url>
-          <loc>https://yourdomain.com/stills/${gallery.slug}</loc>
-          <lastmod>${new Date(gallery.updatedAt).toISOString()}</lastmod>
-          <changefreq>weekly</changefreq>
-          <priority>0.8</priority>
-        </url>
-      `).join('')}
-    </urlset>`;
+  return [...routes, ...galleryUrls];
 }
