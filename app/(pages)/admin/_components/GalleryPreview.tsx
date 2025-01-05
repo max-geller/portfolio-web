@@ -32,7 +32,7 @@ export function GalleryPreview({ images, isOpen, onClose }: GalleryPreviewProps)
                   <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
                     <img
                       src={image.previewUrl}
-                      alt={image.title}
+                      alt=""
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -40,19 +40,23 @@ export function GalleryPreview({ images, isOpen, onClose }: GalleryPreviewProps)
                   {/* Metadata Overlay */}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-75 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
                     <div className="text-white space-y-1">
-                      <p className="font-medium">{image.title}</p>
                       {image.metadata?.camera && (
-                        <p className="text-sm">{image.metadata.camera}</p>
+                        <p className="font-medium">
+                          {`${image.metadata.camera.make} ${image.metadata.camera.model}`.trim()}
+                        </p>
+                      )}
+                      {image.metadata?.lens && (
+                        <p className="text-sm">
+                          {`${image.metadata.lens.make} ${image.metadata.lens.model}`.trim()}
+                        </p>
                       )}
                       <div className="text-xs space-x-2">
-                        {image.metadata?.shutterSpeed && (
-                          <span>{image.metadata.shutterSpeed}</span>
-                        )}
-                        {image.metadata?.aperture && (
-                          <span>f/{image.metadata.aperture}</span>
-                        )}
-                        {image.metadata?.iso && (
-                          <span>ISO {image.metadata.iso}</span>
+                        {image.metadata?.settings && (
+                          <>
+                            <span>{image.metadata.settings.shutterSpeed}s</span>
+                            <span>f/{image.metadata.settings.aperture}</span>
+                            <span>ISO {image.metadata.settings.iso}</span>
+                          </>
                         )}
                       </div>
                     </div>
