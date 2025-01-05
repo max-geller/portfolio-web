@@ -98,7 +98,7 @@ export default function ManagePage() {
                         View
                       </Link>
                       <Link 
-                        href={`/admin/galleries/${gallery.slug}/edit`}
+                        href={`/admin/galleries/edit/${gallery.id}`}
                         className="text-indigo-600 hover:text-indigo-900"
                       >
                         Edit
