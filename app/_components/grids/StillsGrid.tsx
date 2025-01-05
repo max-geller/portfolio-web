@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { collection, getDocs, query, orderBy, where, and } from "firebase/firestore";
 import { db } from "@/app/firebase";
-import { GalleryDocument } from "@/app/types/gallery";
+import { GalleryDocument, NavigationCategory } from "@/app/types/gallery";
 
 interface StillsGridProps {
-  category: string; // e.g., "landscape", "urban", "creative"
+  category: string;
 }
 
 export default function StillsGrid({ category }: StillsGridProps) {
@@ -15,7 +15,6 @@ export default function StillsGrid({ category }: StillsGridProps) {
 
   useEffect(() => {
     const fetchStillItems = async () => {
-      // Query galleries with both category and primaryCategory filters
       const q = query(
         collection(db, "galleries"),
         and(
@@ -30,9 +29,24 @@ export default function StillsGrid({ category }: StillsGridProps) {
       const items = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
-          ...data,
           id: doc.id,
-          date: data.date ? new Date(data.date) : null,
+          title: data.title || '',
+          slug: data.slug || '',
+          description: data.description || '',
+          location: data.location || '',
+          date: data.date?.toDate().toISOString() || '',
+          photoUrl: data.photoUrl || '',
+          navigation: {
+            category: data.navigation?.category || 'stills' as NavigationCategory,
+            primaryCategory: data.navigation?.primaryCategory || '',
+            secondaryCategory: data.navigation?.secondaryCategory || ''
+          },
+          isPublished: data.isPublished || false,
+          gear: {
+            cameras: data.gear?.cameras || [],
+            lenses: data.gear?.lenses || [],
+            accessories: data.gear?.accessories || []
+          }
         } as GalleryDocument;
       });
 
@@ -46,12 +60,12 @@ export default function StillsGrid({ category }: StillsGridProps) {
     <div className="w-full">
       <div className="mx-auto max-w-9xl px-0 sm:px-2 md:px-3 lg:px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-0">
-          {stillItems.map((item, index) => (
+          {stillItems.map((item) => (
             <Link key={item.id} href={`/stills/${item.slug}`}>
               <div className="aspect-square bg-gray-200 relative group cursor-pointer">
                 <Image
-                  src={item.photoUrl}
-                  alt={item.title}
+                  src={item.photoUrl || '/images/placeholder.jpg'}
+                  alt={item.title || 'Gallery image'}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, (max-width: 1536px) 33vw, 25vw"
                   className="object-cover"
