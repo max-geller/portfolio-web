@@ -14,6 +14,7 @@ import {
   collection,
   getDocs,
   deleteDoc,
+  addDoc,
 } from "firebase/firestore";
 import {
   ref,
@@ -45,8 +46,62 @@ export function EditGalleryForm({ galleryId, initialData }: EditGalleryFormProps
     setCoverImageId(initialData.coverImageId || '');
   }, [initialData]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Update gallery document
+      const galleryRef = doc(db, "galleries", galleryId);
+      await updateDoc(galleryRef, {
+        ...formData,
+        coverImageId,
+        updatedAt: new Date().toISOString()
+      });
+
+      // Handle deleted images
+      for (const imageId of deletedImages) {
+        // Delete from storage
+        const imageRef = ref(storage, `galleries/${formData.slug}/${imageId}`);
+        try {
+          await deleteObject(imageRef);
+        } catch (error) {
+          console.error("Error deleting image from storage:", error);
+        }
+        // Delete from Firestore
+        await deleteDoc(doc(db, "galleries", galleryId, "images", imageId));
+      }
+
+      // Handle new images
+      const newImages = galleryImages.filter(img => img.isNew);
+      for (const image of newImages) {
+        if (image.file) {
+          const storageRef = ref(storage, `galleries/${formData.slug}/${image.id}`);
+          await uploadBytes(storageRef, image.file);
+          const url = await getDownloadURL(storageRef);
+
+          await addDoc(collection(db, "galleries", galleryId, "images"), {
+            url,
+            previewUrl: url,
+            aspectRatio: image.aspectRatio,
+            metadata: image.metadata,
+            order: image.order
+          });
+        }
+      }
+
+      toast.success("Gallery updated successfully");
+      router.push('/admin/manage');
+    } catch (error) {
+      console.error("Error updating gallery:", error);
+      toast.error("Failed to update gallery");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <EditBasicInfo
         formData={formData}
         setFormData={setFormData}
@@ -74,7 +129,22 @@ export function EditGalleryForm({ galleryId, initialData }: EditGalleryFormProps
         gallerySlug={formData.slug}
       />
 
-      {/* Rest of your form */}
-    </div>
+      <div className="flex justify-end space-x-4">
+        <button
+          type="button"
+          onClick={() => router.push('/admin/manage')}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+        >
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
   );
 }

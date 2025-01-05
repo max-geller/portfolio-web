@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GalleryDocument } from '@/app/types/gallery';
-import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/app/firebase';
 
 interface Category {
@@ -31,6 +31,7 @@ export function EditNavigationInfo({
   const [primaryCategories, setPrimaryCategories] = useState<Category[]>([]);
   const [secondaryCategories, setSecondaryCategories] = useState<Category[]>([]);
 
+  // Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
       const q = query(collection(db, "categories"), orderBy("order"));
@@ -40,36 +41,44 @@ export function EditNavigationInfo({
         ...doc.data()
       })) as Category[];
       setCategories(items);
+      
+      // Filter primary categories based on current category
+      const filtered = items.filter(
+        cat => cat.type === "primary" && 
+        cat.parentCategory === formData.navigation.category
+      );
+      setPrimaryCategories(filtered);
+
+      // Debug log
+      console.log('Navigation Data:', formData.navigation);
     };
     fetchCategories();
-  }, []);
+  }, [formData.navigation.category]);
 
-  useEffect(() => {
-    setPrimaryCategories(
-      categories.filter(cat => 
-        cat.type === "primary" && 
-        cat.parentCategory === formData.navigation.category
-      )
-    );
-  }, [categories, formData.navigation.category]);
-
+  // Update secondary categories when primary category changes
   useEffect(() => {
     if (formData.navigation.primaryCategory) {
-      setSecondaryCategories(
-        categories.filter(cat => 
-          cat.type === "secondary" && 
-          cat.parentId === formData.navigation.primaryCategory
-        )
+      const primaryCat = categories.find(
+        cat => cat.name.toLowerCase() === formData.navigation.primaryCategory.toLowerCase()
       );
+      
+      if (primaryCat) {
+        setSecondaryCategories(
+          categories.filter(cat => 
+            cat.type === "secondary" && 
+            cat.parentId === primaryCat.id
+          )
+        );
+      }
     } else {
       setSecondaryCategories([]);
     }
   }, [categories, formData.navigation.primaryCategory]);
 
-  useEffect(() => {
-    // Debug log to verify data
-    console.log('Navigation Data:', formData.navigation);
-  }, [formData.navigation]);
+  // Find the category ID that matches the stored name
+  const selectedCategoryId = primaryCategories.find(
+    cat => cat.name.toLowerCase() === formData.navigation.primaryCategory?.toLowerCase()
+  )?.id || '';
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
@@ -91,6 +100,7 @@ export function EditNavigationInfo({
             })}
             className={baseInputStyles}
           >
+            <option value="">Select a category</option>
             <option value="stills">Stills</option>
             <option value="travel">Travel</option>
             <option value="aerial">Aerial</option>
@@ -101,20 +111,25 @@ export function EditNavigationInfo({
         <div>
           <label className="block text-sm font-medium text-gray-700">Primary Category*</label>
           <select
-            value={formData.navigation.primaryCategory}
-            onChange={(e) => setFormData({
-              ...formData,
-              navigation: {
-                ...formData.navigation,
-                primaryCategory: e.target.value,
-                secondaryCategory: ""
-              }
-            })}
+            value={selectedCategoryId}
+            onChange={(e) => {
+              const selectedCategory = primaryCategories.find(cat => cat.id === e.target.value);
+              setFormData({
+                ...formData,
+                navigation: {
+                  ...formData.navigation,
+                  primaryCategory: selectedCategory ? selectedCategory.name : '',
+                  secondaryCategory: ""
+                }
+              });
+            }}
             className={`${baseInputStyles} ${errors?.primaryCategory ? 'border-red-500' : ''}`}
           >
             <option value="">Select a primary category</option>
             {primaryCategories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
             ))}
           </select>
           {errors?.primaryCategory && (
