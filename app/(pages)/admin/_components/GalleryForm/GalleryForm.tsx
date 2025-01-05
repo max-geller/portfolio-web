@@ -6,7 +6,7 @@ import { BasicInfo } from "./BasicInfo";
 import { NavigationInfo } from "./NavigationInfo";
 import { GearInfo } from "./GearInfo";
 import { ImageUploadSection } from "./ImageUploadSection";
-import { GalleryDocument, GalleryImageWithMetadata } from "@/app/types/gallery";
+import { GalleryDocument, GalleryImageWithMetadata, ExifMetadata } from "@/app/types/gallery";
 import { db, storage } from "@/app/firebase";
 import {
   collection,
@@ -80,10 +80,35 @@ export default function GalleryForm({
     await uploadBytes(storageRef, image.file);
     const url = await getDownloadURL(storageRef);
 
+    const defaultMetadata: ExifMetadata = {
+      camera: {
+        make: '',
+        model: ''
+      },
+      lens: {
+        make: '',
+        model: ''
+      },
+      settings: {
+        focalLength: 0,
+        aperture: 0,
+        shutterSpeed: 0,
+        iso: 0
+      },
+      dimensions: {
+        width: 0,
+        height: 0
+      },
+      filename: image.file.name,
+      filesize: image.file.size,
+      type: image.file.type,
+      datetime: undefined
+    };
+
     return {
       url,
       aspectRatio: image.aspectRatio,
-      metadata: image.metadata || {},
+      metadata: image.metadata || defaultMetadata,
     };
   };
 
@@ -149,24 +174,30 @@ export default function GalleryForm({
           url: image.url,
           aspectRatio: image.aspectRatio,
           isCover: image.url === coverImage.url,
-          metadata: image.metadata ? {
-            camera: image.metadata.camera ? {
-              make: image.metadata.camera.make,
-              model: image.metadata.camera.model
-            } : null,
-            lens: image.metadata.lens ? {
-              make: image.metadata.lens.make,
-              model: image.metadata.lens.model
-            } : null,
-            settings: image.metadata.settings ? {
-              aperture: image.metadata.settings.aperture,
-              shutterSpeed: image.metadata.settings.shutterSpeed,
-              iso: image.metadata.settings.iso,
-              focalLength: image.metadata.settings.focalLength
-            } : null,
-            dimensions: image.metadata.dimensions || null,
-            datetime: image.metadata.datetime || null
-          } : null
+          metadata: {
+            camera: image.metadata?.camera || {
+              make: '',
+              model: ''
+            },
+            lens: image.metadata?.lens || {
+              make: '',
+              model: ''
+            },
+            settings: image.metadata?.settings || {
+              focalLength: 0,
+              aperture: 0,
+              shutterSpeed: 0,
+              iso: 0
+            },
+            dimensions: image.metadata?.dimensions || {
+              width: 0,
+              height: 0
+            },
+            filename: image.metadata?.filename || '',
+            filesize: image.metadata?.filesize || 0,
+            type: image.metadata?.type || '',
+            datetime: image.metadata?.datetime || undefined
+          }
         };
 
         await addDoc(imagesCollection, imageMetadata);
